@@ -110,6 +110,7 @@ $standorte = computed(function () {
 
 $gvps = computed(function () {
     return Gvp::query()
+    ->where('kuerzel','FB')
         ->orderBy('name')
         ->get();
 });
