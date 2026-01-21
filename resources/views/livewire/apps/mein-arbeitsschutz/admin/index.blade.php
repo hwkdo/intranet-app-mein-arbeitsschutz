@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Gvp;
 use App\Models\Standort;
 use Flux\Flux;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Category;
@@ -8,6 +7,7 @@ use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Document;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\DocumentAssignment;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\DocumentType;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Subcategory;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Models\WorkArea;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
@@ -32,7 +32,6 @@ state([
     'selectedSubcategoryIds' => [],
     'selectedDocumentTypeIds' => [],
     'selectedStandortIds' => [],
-    'selectedGvpIds' => [],
     'documentSearch' => '',
     'documentSortField' => 'updated_at',
     'documentSortDirection' => 'desc',
@@ -43,6 +42,11 @@ state([
     'editCategoryIds' => [],
     'editSubcategoryIds' => [],
     'editDocumentTypeIds' => [],
+    'workAreaName' => '',
+    'workAreaIconFile' => null,
+    'workAreaSortOrder' => 0,
+    'showWorkAreaModal' => false,
+    'editingWorkAreaId' => null,
 ]);
 
 rules([
@@ -67,21 +71,11 @@ mount(function () {
     $this->selectedDocumentTypeIds = [];
 
     $firstAidCategory = Category::query()->where('key', 'first_aid')->first();
-    $workAreasCategory = Category::query()->where('key', 'work_areas')->first();
 
     if ($firstAidCategory) {
         $this->selectedStandortIds = Subcategory::query()
             ->where('category_id', $firstAidCategory->id)
             ->where('source_type', Standort::class)
-            ->pluck('source_id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
-    }
-
-    if ($workAreasCategory) {
-        $this->selectedGvpIds = Subcategory::query()
-            ->where('category_id', $workAreasCategory->id)
-            ->where('source_type', Gvp::class)
             ->pluck('source_id')
             ->map(fn ($id) => (int) $id)
             ->all();
@@ -108,10 +102,9 @@ $standorte = computed(function () {
         ->get();
 });
 
-$gvps = computed(function () {
-    return Gvp::query()
-    ->where('kuerzel','FB')
-        ->orderBy('name')
+$workAreas = computed(function () {
+    return WorkArea::query()
+        ->orderBy('sort_order')
         ->get();
 });
 
@@ -152,7 +145,7 @@ $validationErrors = computed(function () {
         }
     }
 
-    // Prüfe: Wenn "Arbeitsbereiche" ausgewählt, muss Fachbereich ausgewählt sein
+    // Prüfe: Wenn "Arbeitsbereiche" ausgewählt, muss Arbeitsbereich ausgewählt sein
     if ($workAreasCategory && in_array($workAreasCategory->id, $selectedCategoryIds, true)) {
         $selectedSubcategories = collect();
         if (! empty($selectedSubcategoryIds)) {
@@ -163,27 +156,27 @@ $validationErrors = computed(function () {
         }
         $workAreasSubcategories = $selectedSubcategories->filter(fn ($sub) => $sub->category_id === $workAreasCategory->id);
         if ($workAreasSubcategories->isEmpty()) {
-            $errors[] = 'Für die Kategorie "Arbeitsbereiche" muss mindestens ein Fachbereich ausgewählt werden.';
+            $errors[] = 'Für die Kategorie "Arbeitsbereiche" muss mindestens ein Arbeitsbereich ausgewählt werden.';
         } else {
-            // Prüfe: Wenn GVP-Unterkategorien ausgewählt, muss Dokumenttyp ausgewählt sein
-            $gvpSubcategories = $workAreasSubcategories->filter(fn ($sub) => $sub->source_type === Gvp::class);
+            // Prüfe: Wenn Arbeitsbereich-Unterkategorien ausgewählt, muss Dokumenttyp ausgewählt sein
+            $workAreaSubcategories = $workAreasSubcategories->filter(fn ($sub) => $sub->source_type === WorkArea::class);
             $selectedDocumentTypeIds = is_array($this->selectedDocumentTypeIds) ? $this->selectedDocumentTypeIds : [];
-            if ($gvpSubcategories->isNotEmpty() && empty($selectedDocumentTypeIds)) {
-                $errors[] = 'Für Fachbereiche muss ein Dokumenttyp ausgewählt werden.';
+            if ($workAreaSubcategories->isNotEmpty() && empty($selectedDocumentTypeIds)) {
+                $errors[] = 'Für Arbeitsbereiche muss ein Dokumenttyp ausgewählt werden.';
             }
         }
     }
 
-    // Prüfe: Wenn GVP-Unterkategorien ausgewählt (auch ohne "Arbeitsbereiche" Kategorie), muss Dokumenttyp ausgewählt sein
+    // Prüfe: Wenn Arbeitsbereich-Unterkategorien ausgewählt (auch ohne "Arbeitsbereiche" Kategorie), muss Dokumenttyp ausgewählt sein
     if (! empty($selectedSubcategoryIds)) {
         $selectedSubcategories = Subcategory::query()
             ->whereIn('id', $selectedSubcategoryIds)
             ->with('category')
             ->get();
-        $gvpSubcategories = $selectedSubcategories->filter(fn ($sub) => $sub->source_type === Gvp::class);
+        $workAreaSubcategories = $selectedSubcategories->filter(fn ($sub) => $sub->source_type === WorkArea::class);
         $selectedDocumentTypeIds = is_array($this->selectedDocumentTypeIds) ? $this->selectedDocumentTypeIds : [];
-        if ($gvpSubcategories->isNotEmpty() && empty($selectedDocumentTypeIds)) {
-            $errors[] = 'Für Fachbereiche muss ein Dokumenttyp ausgewählt werden.';
+        if ($workAreaSubcategories->isNotEmpty() && empty($selectedDocumentTypeIds)) {
+            $errors[] = 'Für Arbeitsbereiche muss ein Dokumenttyp ausgewählt werden.';
         }
     }
 
@@ -267,7 +260,7 @@ $saveUploads = function () {
         }
     }
 
-    // Prüfe: Wenn "Arbeitsbereiche" ausgewählt, muss Fachbereich ausgewählt sein
+    // Prüfe: Wenn "Arbeitsbereiche" ausgewählt, muss Arbeitsbereich ausgewählt sein
     if ($workAreasCategory && in_array((int) $workAreasCategory->id, $selectedCategoryIds, true)) {
         $selectedSubcategories = collect();
         if (! empty($selectedSubcategoryIds)) {
@@ -278,18 +271,18 @@ $saveUploads = function () {
         }
         $workAreasSubcategories = $selectedSubcategories->filter(fn ($sub) => $sub->category_id === $workAreasCategory->id);
         if ($workAreasSubcategories->isEmpty()) {
-            Flux::toast(text: 'Für die Kategorie "Arbeitsbereiche" muss mindestens ein Fachbereich ausgewählt werden.', variant: 'error');
-            $this->addError('categorySelection', 'Für die Kategorie "Arbeitsbereiche" muss mindestens ein Fachbereich ausgewählt werden.');
+            Flux::toast(text: 'Für die Kategorie "Arbeitsbereiche" muss mindestens ein Arbeitsbereich ausgewählt werden.', variant: 'error');
+            $this->addError('categorySelection', 'Für die Kategorie "Arbeitsbereiche" muss mindestens ein Arbeitsbereich ausgewählt werden.');
 
             return;
         }
 
-        // Prüfe: Wenn GVP-Unterkategorien ausgewählt, muss Dokumenttyp ausgewählt sein
-        $gvpSubcategories = $workAreasSubcategories->filter(fn ($sub) => $sub->source_type === Gvp::class);
+        // Prüfe: Wenn Arbeitsbereich-Unterkategorien ausgewählt, muss Dokumenttyp ausgewählt sein
+        $workAreaSubcategories = $workAreasSubcategories->filter(fn ($sub) => $sub->source_type === WorkArea::class);
         $selectedDocumentTypeIds = is_array($this->selectedDocumentTypeIds) ? $this->selectedDocumentTypeIds : [];
-        if ($gvpSubcategories->isNotEmpty() && empty($selectedDocumentTypeIds)) {
-            Flux::toast(text: 'Für Fachbereiche muss ein Dokumenttyp ausgewählt werden.', variant: 'error');
-            $this->addError('documentTypeSelection', 'Für Fachbereiche muss ein Dokumenttyp ausgewählt werden.');
+        if ($workAreaSubcategories->isNotEmpty() && empty($selectedDocumentTypeIds)) {
+            Flux::toast(text: 'Für Arbeitsbereiche muss ein Dokumenttyp ausgewählt werden.', variant: 'error');
+            $this->addError('documentTypeSelection', 'Für Arbeitsbereiche muss ein Dokumenttyp ausgewählt werden.');
 
             return;
         }
@@ -361,13 +354,13 @@ $saveUploads = function () {
             }
         }
 
-        // Unterkategorien (Standorte oder GVPs)
+        // Unterkategorien (Standorte oder Arbeitsbereiche)
         foreach ($selectedSubcategories as $subcategory) {
-            $isGvp = $subcategory->source_type === Gvp::class;
+            $isWorkArea = $subcategory->source_type === WorkArea::class;
 
             $selectedDocumentTypeIds = is_array($this->selectedDocumentTypeIds) ? $this->selectedDocumentTypeIds : [];
-            if ($isGvp && ! empty($selectedDocumentTypeIds)) {
-                // Für GVPs: Erstelle Assignment für jeden ausgewählten Dokumenttyp
+            if ($isWorkArea && ! empty($selectedDocumentTypeIds)) {
+                // Für Arbeitsbereiche: Erstelle Assignment für jeden ausgewählten Dokumenttyp
                 foreach ($selectedDocumentTypeIds as $documentTypeId) {
                     DocumentAssignment::firstOrCreate([
                         'document_id' => $document->id,
@@ -438,34 +431,6 @@ $saveMarkings = function () {
         }
     }
 
-    if ($workAreasCategory) {
-        $selectedGvpIds = collect($this->selectedGvpIds)->map(fn ($id) => (int) $id)->all();
-        $existingIds = Subcategory::query()
-            ->where('category_id', $workAreasCategory->id)
-            ->where('source_type', Gvp::class)
-            ->pluck('source_id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
-
-        $toCreate = array_diff($selectedGvpIds, $existingIds);
-        $toDelete = array_diff($existingIds, $selectedGvpIds);
-
-        if (! empty($toDelete)) {
-            Subcategory::query()
-                ->where('category_id', $workAreasCategory->id)
-                ->where('source_type', Gvp::class)
-                ->whereIn('source_id', $toDelete)
-                ->delete();
-        }
-
-        foreach ($toCreate as $gvpId) {
-            Subcategory::create([
-                'category_id' => $workAreasCategory->id,
-                'source_type' => Gvp::class,
-                'source_id' => $gvpId,
-            ]);
-        }
-    }
 
     Flux::toast(text: 'Markierungen gespeichert.', variant: 'success');
 };
@@ -575,9 +540,9 @@ $saveEdit = function (): void {
 
     // Unterkategorien
     foreach ($selectedSubcategories as $subcategory) {
-        $isGvp = $subcategory->source_type === Gvp::class;
+        $isWorkArea = $subcategory->source_type === WorkArea::class;
 
-        if ($isGvp && ! empty($this->editDocumentTypeIds)) {
+        if ($isWorkArea && ! empty($this->editDocumentTypeIds)) {
             foreach ($this->editDocumentTypeIds as $documentTypeId) {
                 DocumentAssignment::create([
                     'document_id' => $document->id,
@@ -602,6 +567,78 @@ $saveEdit = function (): void {
     Flux::toast(text: 'Dokument erfolgreich aktualisiert.', variant: 'success');
 };
 
+$createWorkArea = function (): void {
+    $this->editingWorkAreaId = null;
+    $this->workAreaName = '';
+    $this->workAreaIconFile = null;
+    $this->workAreaSortOrder = 0;
+    $this->showWorkAreaModal = true;
+};
+
+$editWorkArea = function (int $id): void {
+    $workArea = WorkArea::findOrFail($id);
+    $this->editingWorkAreaId = $id;
+    $this->workAreaName = $workArea->name;
+    $this->workAreaIconFile = null;
+    $this->workAreaSortOrder = $workArea->sort_order;
+    $this->showWorkAreaModal = true;
+};
+
+$saveWorkArea = function (): void {
+    $this->validate([
+        'workAreaName' => 'required|string|max:255',
+        'workAreaIconFile' => 'nullable|mimes:svg|max:1024',
+        'workAreaSortOrder' => 'required|integer|min:0',
+    ]);
+
+    $workArea = $this->editingWorkAreaId
+        ? WorkArea::findOrFail($this->editingWorkAreaId)
+        : new WorkArea();
+
+    $workArea->name = $this->workAreaName;
+    $workArea->sort_order = $this->workAreaSortOrder;
+    $workArea->save();
+
+    // Icon hochladen, falls vorhanden
+    if ($this->workAreaIconFile) {
+        $workArea->setIcon($this->workAreaIconFile);
+    }
+
+    // Erstelle/aktualisiere automatisch Subcategory für work_areas Category
+    $workAreasCategory = Category::query()->where('key', 'work_areas')->first();
+    if ($workAreasCategory) {
+        Subcategory::firstOrCreate(
+            [
+                'category_id' => $workAreasCategory->id,
+                'source_type' => WorkArea::class,
+                'source_id' => $workArea->id,
+            ]
+        );
+    }
+
+    $isUpdate = (bool) $this->editingWorkAreaId;
+    $this->showWorkAreaModal = false;
+    $this->reset(['editingWorkAreaId', 'workAreaName', 'workAreaIconFile', 'workAreaSortOrder']);
+
+    Flux::toast(text: $isUpdate ? 'Arbeitsbereich aktualisiert.' : 'Arbeitsbereich erstellt.', variant: 'success');
+};
+
+$deleteWorkAreaIcon = function (): void {
+    if ($this->editingWorkAreaId) {
+        $workArea = WorkArea::findOrFail($this->editingWorkAreaId);
+        $workArea->setIcon(null);
+        Flux::toast(text: 'Icon gelöscht.', variant: 'success');
+    }
+};
+
+$deleteWorkArea = function (int $id): void {
+    $workArea = WorkArea::findOrFail($id);
+    // Subcategory wird automatisch via CASCADE gelöscht
+    $workArea->delete();
+
+    Flux::toast(text: 'Arbeitsbereich gelöscht.', variant: 'success');
+};
+
 ?>
 <div>
 <x-intranet-app-mein-arbeitsschutz::mein-arbeitsschutz-layout heading="MeinArbeitsschutz App" subheading="Admin">
@@ -609,6 +646,7 @@ $saveEdit = function (): void {
         <flux:tabs wire:model="activeTab">
             <flux:tab name="uploads" icon="arrow-up-tray">Uploads</flux:tab>
             <flux:tab name="dokumente" icon="document-text">Dokumente</flux:tab>
+            <flux:tab name="arbeitsbereiche" icon="wrench-screwdriver">Arbeitsbereiche</flux:tab>
             <flux:tab name="markierungen" icon="map-pin">Markierungen</flux:tab>
             <flux:tab name="einstellungen" icon="cog-6-tooth">Einstellungen</flux:tab>
         </flux:tabs>
@@ -703,7 +741,7 @@ $saveEdit = function (): void {
                                     <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                                         {{ $category->label }}
                                         @if($needsSubcategory)
-                                            <span class="text-xs text-zinc-500">(benötigt {{ $category->key === 'first_aid' ? 'Standort' : 'Fachbereich' }})</span>
+                                            <span class="text-xs text-zinc-500">(benötigt {{ $category->key === 'first_aid' ? 'Standort' : 'Arbeitsbereich' }})</span>
                                         @endif
                                     </span>
                                 </label>
@@ -748,7 +786,7 @@ $saveEdit = function (): void {
                                     <br>
                                 @endif
                                 @if($needsWorkAreasSubcategory)
-                                    Für "Arbeitsbereiche" muss mindestens ein Fachbereich ausgewählt werden.
+                                    Für "Arbeitsbereiche" muss mindestens ein Arbeitsbereich ausgewählt werden.
                                 @endif
                             </flux:callout>
                         @endif
@@ -780,8 +818,8 @@ $saveEdit = function (): void {
                         <flux:error name="selectedSubcategoryIds.*" />
                     </div>
 
-                    @php($hasGvpSubcategories = $selectedSubcategories->contains(fn ($sub) => $sub->source_type === \App\Models\Gvp::class))
-                    @php($showDocumentTypes = $hasWorkAreasSelected && $hasGvpSubcategories)
+                    @php($hasWorkAreaSubcategories = $selectedSubcategories->contains(fn ($sub) => $sub->source_type === \Hwkdo\IntranetAppMeinArbeitsschutz\Models\WorkArea::class))
+                    @php($showDocumentTypes = $hasWorkAreasSelected && $hasWorkAreaSubcategories)
                     @php($needsDocumentType = $showDocumentTypes && empty($this->selectedDocumentTypeIds))
 
                     @if($showDocumentTypes)
@@ -792,11 +830,11 @@ $saveEdit = function (): void {
                             </div>
                             @if($needsDocumentType)
                                 <flux:callout variant="danger" icon="exclamation-triangle">
-                                    Für Fachbereiche muss mindestens ein Dokumenttyp ausgewählt werden.
+                                    Für Arbeitsbereiche muss mindestens ein Dokumenttyp ausgewählt werden.
                                 </flux:callout>
                             @else
                                 <flux:text class="text-sm text-zinc-500">
-                                    Bitte wählen Sie mindestens einen Dokumenttyp für die ausgewählten Fachbereiche.
+                                    Bitte wählen Sie mindestens einen Dokumenttyp für die ausgewählten Arbeitsbereiche.
                                 </flux:text>
                             @endif
                             <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
@@ -1030,11 +1068,89 @@ $saveEdit = function (): void {
             </flux:card>
         </flux:tab.panel>
 
+        <flux:tab.panel name="arbeitsbereiche">
+            <flux:card>
+                <div class="mb-6 flex items-center justify-between">
+                    <div>
+                        <flux:heading size="lg" class="mb-2">Arbeitsbereiche verwalten</flux:heading>
+                        <flux:text>
+                            Erstellen und verwalten Sie Arbeitsbereiche. Jeder erstellte Arbeitsbereich ist automatisch verfügbar.
+                        </flux:text>
+                    </div>
+                    <flux:button wire:click="createWorkArea" variant="primary" icon="plus">
+                        Neu erstellen
+                    </flux:button>
+                </div>
+
+                <flux:table>
+                    <flux:table.columns>
+                        <flux:table.column>Name</flux:table.column>
+                        <flux:table.column>Icon</flux:table.column>
+                        <flux:table.column>Sortierung</flux:table.column>
+                        <flux:table.column>Aktionen</flux:table.column>
+                    </flux:table.columns>
+
+                    <flux:table.rows>
+                        @foreach($this->workAreas as $workArea)
+                            <flux:table.row :key="$workArea->id">
+                                <flux:table.cell>
+                                    <div class="font-medium">{{ $workArea->name }}</div>
+                                </flux:table.cell>
+                                <flux:table.cell>
+                                    @if($workArea->hasIcon())
+                                        <div class="flex items-center justify-center w-8 h-8">
+                                            <img
+                                                src="{{ $workArea->getIconUrl() }}"
+                                                alt="Icon"
+                                                class="max-w-full max-h-full object-contain"
+                                            />
+                                        </div>
+                                    @else
+                                        <span class="text-sm text-zinc-400">Kein Icon</span>
+                                    @endif
+                                </flux:table.cell>
+                                <flux:table.cell>
+                                    {{ $workArea->sort_order }}
+                                </flux:table.cell>
+                                <flux:table.cell>
+                                    <div class="flex gap-2">
+                                        <flux:button 
+                                            size="sm" 
+                                            variant="ghost" 
+                                            icon="pencil"
+                                            wire:click="editWorkArea({{ $workArea->id }})"
+                                        >
+                                            Bearbeiten
+                                        </flux:button>
+                                        <flux:button 
+                                            size="sm" 
+                                            variant="danger" 
+                                            icon="trash"
+                                            wire:click="deleteWorkArea({{ $workArea->id }})"
+                                            wire:confirm="Sind Sie sicher, dass Sie diesen Arbeitsbereich löschen möchten?"
+                                        >
+                                            Löschen
+                                        </flux:button>
+                                    </div>
+                                </flux:table.cell>
+                            </flux:table.row>
+                        @endforeach
+                    </flux:table.rows>
+                </flux:table>
+
+                @if($this->workAreas->isEmpty())
+                    <flux:callout variant="info" icon="information-circle" class="mt-4">
+                        Noch keine Arbeitsbereiche vorhanden. Klicken Sie auf "Neu erstellen", um einen Arbeitsbereich anzulegen.
+                    </flux:callout>
+                @endif
+            </flux:card>
+        </flux:tab.panel>
+
         <flux:tab.panel name="markierungen">
             <flux:card>
                 <flux:heading size="lg" class="mb-4">Unterkategorien markieren</flux:heading>
                 <flux:text class="mb-6">
-                    Wählen Sie die Standorte und GVPs aus, die als Unterkategorien angezeigt werden sollen.
+                    Wählen Sie die Standorte aus, die als Unterkategorien für "Notsituation/Erste Hilfe" angezeigt werden sollen.
                 </flux:text>
 
                 <form wire:submit="saveMarkings" class="space-y-8">
@@ -1051,25 +1167,6 @@ $saveEdit = function (): void {
                                     />
                                     <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                                         {{ $standort->name }}
-                                    </span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <div class="space-y-3">
-                        <flux:heading size="md">Arbeitsbereiche</flux:heading>
-                        <div class="grid gap-3 md:grid-cols-2">
-                            @foreach($this->gvps as $gvp)
-                                <label class="flex items-center gap-3 rounded-lg border px-4 py-3" wire:key="gvp-{{ $gvp->id }}">
-                                    <input
-                                        type="checkbox"
-                                        wire:model="selectedGvpIds"
-                                        value="{{ $gvp->id }}"
-                                        class="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
-                                    />
-                                    <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                                        {{ $gvp->bezeichnung }}
                                     </span>
                                 </label>
                             @endforeach
@@ -1173,9 +1270,9 @@ $saveEdit = function (): void {
 
         @php($editSubcategoryIds = is_array($this->editSubcategoryIds) ? collect($this->editSubcategoryIds)->map(fn ($id) => (int) $id)->all() : [])
         @php($selectedEditSubcategories = $this->subcategories->flatten()->filter(fn ($sub) => in_array($sub->id, $editSubcategoryIds, true)))
-        @php($hasGvpEditSubcategories = $selectedEditSubcategories->contains(fn ($sub) => $sub->source_type === \App\Models\Gvp::class))
+        @php($hasWorkAreaEditSubcategories = $selectedEditSubcategories->contains(fn ($sub) => $sub->source_type === \Hwkdo\IntranetAppMeinArbeitsschutz\Models\WorkArea::class))
 
-        @if($hasGvpEditSubcategories)
+        @if($hasWorkAreaEditSubcategories)
             <div class="space-y-4">
                 <flux:heading size="md">Dokumenttypen</flux:heading>
                 <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
@@ -1204,6 +1301,75 @@ $saveEdit = function (): void {
                 Speichern
             </flux:button>
             <flux:button type="button" variant="ghost" wire:click="cancelEdit">
+                Abbrechen
+            </flux:button>
+        </div>
+    </form>
+</flux:modal>
+
+{{-- WorkArea Bearbeitungsmodal --}}
+<flux:modal wire:model.self="showWorkAreaModal" class="md:w-[600px]">
+    <form wire:submit="saveWorkArea" class="space-y-6">
+        <flux:heading size="lg">{{ $editingWorkAreaId ? 'Arbeitsbereich bearbeiten' : 'Neuer Arbeitsbereich' }}</flux:heading>
+
+        <flux:input
+            wire:model="workAreaName"
+            label="Name"
+            placeholder="Name des Arbeitsbereichs eingeben"
+            required
+        />
+
+        @php($currentWorkArea = $this->editingWorkAreaId ? WorkArea::find($this->editingWorkAreaId) : null)
+
+        @if($currentWorkArea && $currentWorkArea->hasIcon())
+            <div class="space-y-2">
+                <flux:heading size="sm">Aktuelles Icon</flux:heading>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center justify-center w-16 h-16 border border-zinc-300 dark:border-zinc-700 rounded">
+                        <img
+                            src="{{ $currentWorkArea->getIconUrl() }}"
+                            alt="Icon"
+                            class="max-w-full max-h-full object-contain"
+                        />
+                    </div>
+                    <flux:button
+                        wire:click="deleteWorkAreaIcon"
+                        variant="danger"
+                        size="sm"
+                        icon="trash"
+                    >
+                        Icon löschen
+                    </flux:button>
+                </div>
+            </div>
+        @endif
+
+        <flux:input
+            type="file"
+            wire:model="workAreaIconFile"
+            label="Icon"
+            description="SVG-Datei für das Icon (max. 1MB)"
+            accept=".svg"
+        />
+
+        <flux:input
+            wire:model="workAreaSortOrder"
+            type="number"
+            label="Sortierung"
+            placeholder="0"
+            min="0"
+            required
+        />
+
+        <div class="flex gap-2">
+            <flux:button type="submit" variant="primary" icon="check">
+                Speichern
+            </flux:button>
+            <flux:button 
+                type="button" 
+                variant="ghost" 
+                wire:click="$set('showWorkAreaModal', false)"
+            >
                 Abbrechen
             </flux:button>
         </div>

@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -46,13 +47,23 @@ return new class extends Migration
                 ->cascadeOnDelete();
         });
 
-        // Füge den Foreign Key für document_type_id hinzu
-        Schema::table('intranet_app_mein_arbeitsschutz_document_assignments', function (Blueprint $table) {
-            $table->foreign('document_type_id', 'mas_doc_assign_doctype_fk')
-                ->references('id')
-                ->on('intranet_app_mein_arbeitsschutz_document_types')
-                ->cascadeOnDelete();
-        });
+        // Füge den Foreign Key für document_type_id hinzu (nur wenn er noch nicht existiert)
+        $constraintExists = DB::selectOne(
+            "SELECT CONSTRAINT_NAME 
+             FROM information_schema.KEY_COLUMN_USAGE 
+             WHERE TABLE_SCHEMA = DATABASE() 
+             AND TABLE_NAME = 'intranet_app_mein_arbeitsschutz_document_assignments' 
+             AND CONSTRAINT_NAME = 'mas_doc_assign_doctype_fk'"
+        );
+        
+        if (! $constraintExists) {
+            Schema::table('intranet_app_mein_arbeitsschutz_document_assignments', function (Blueprint $table) {
+                $table->foreign('document_type_id', 'mas_doc_assign_doctype_fk')
+                    ->references('id')
+                    ->on('intranet_app_mein_arbeitsschutz_document_types')
+                    ->cascadeOnDelete();
+            });
+        }
 
         // Füge die neue Unique-Constraint mit allen vier Spalten hinzu
         Schema::table('intranet_app_mein_arbeitsschutz_document_assignments', function (Blueprint $table) {

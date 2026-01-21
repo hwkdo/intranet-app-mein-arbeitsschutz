@@ -4,6 +4,7 @@ use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Category;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Document;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\DocumentType;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Subcategory;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Models\WorkArea;
 use function Livewire\Volt\{computed, mount, state, title};
 
 state([
@@ -32,20 +33,6 @@ $subcategories = computed(function () {
         ->with('source')
         ->orderBy('id')
         ->get();
-
-    // Eager load media for Gvp models
-    $gvpSubcategories = $subcategories->filter(fn ($subcategory) => $subcategory->source_type === \App\Models\Gvp::class);
-    
-    if ($gvpSubcategories->isNotEmpty()) {
-        $gvpIds = $gvpSubcategories->pluck('source_id')->unique()->values();
-        $gvps = \App\Models\Gvp::with('media')->whereIn('id', $gvpIds)->get()->keyBy('id');
-        
-        foreach ($gvpSubcategories as $subcategory) {
-            if (isset($gvps[$subcategory->source_id])) {
-                $subcategory->setRelation('source', $gvps[$subcategory->source_id]);
-            }
-        }
-    }
 
     return $subcategories;
 });
@@ -151,9 +138,9 @@ $clearDocumentTypeSelection = function (): void {
                         @endif
                         @foreach($this->subcategories as $subcategory)
                             @php($subcategoryLabel = $subcategory->source?->name ?? $subcategory->source?->bezeichnung ?? 'Unbekannt')
-                            @php($isGvp = $subcategory->source instanceof \App\Models\Gvp)
-                            @php($hasIcon = $isGvp && $subcategory->source->hasGewerkeIcon())
-                            @php($iconUrl = $hasIcon ? $subcategory->source->getGewerkeIconUrl() : null)
+                            @php($isWorkArea = $subcategory->source instanceof \Hwkdo\IntranetAppMeinArbeitsschutz\Models\WorkArea)
+                            @php($hasIcon = $isWorkArea && $subcategory->source->hasIcon())
+                            @php($iconUrl = $hasIcon ? $subcategory->source->getIconUrl() : null)
                             <flux:button
                                 wire:key="subcategory-button-{{ $subcategory->id }}"
                                 wire:click="selectSubcategory({{ $subcategory->id }})"
@@ -165,9 +152,9 @@ $clearDocumentTypeSelection = function (): void {
                                         <img
                                             src="{{ $iconUrl }}"
                                             alt="{{ $subcategoryLabel }}"
-                                            class="h-10 w-10 flex-shrink-0 object-contain gewerke-icon"
+                                            class="h-10 w-10 flex-shrink-0 object-contain"
                                         />
-                                    @elseif($isGvp)
+                                    @elseif($isWorkArea)
                                         <flux:icon icon="wrench-screwdriver" class="h-10 w-10 flex-shrink-0" />
                                     @endif
                                     <span class="text-base font-medium">{{ $subcategoryLabel }}</span>

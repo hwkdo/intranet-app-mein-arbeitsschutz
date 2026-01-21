@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Models\Gvp;
 use App\Models\Standort;
 use App\Models\User;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Category;
@@ -10,6 +9,7 @@ use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Document;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\DocumentAssignment;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\DocumentType;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Subcategory;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Models\WorkArea;
 use Livewire\Volt\Volt;
 
 beforeEach(function () {
@@ -17,15 +17,15 @@ beforeEach(function () {
     $this->actingAs($this->user);
 });
 
-it('can create document with work areas category, gvp and document type', function () {
+it('can create document with work areas category, work area and document type', function () {
     $workAreasCategory = Category::query()->where('key', 'work_areas')->first();
-    $gvp = Gvp::factory()->create();
+    $workArea = WorkArea::factory()->create();
     $documentType = DocumentType::query()->where('key', 'risk_assessment')->first();
 
     $subcategory = Subcategory::create([
         'category_id' => $workAreasCategory->id,
-        'source_type' => Gvp::class,
-        'source_id' => $gvp->id,
+        'source_type' => WorkArea::class,
+        'source_id' => $workArea->id,
     ]);
 
     $document = Document::factory()->create();
@@ -83,13 +83,13 @@ it('can create document with general category without subcategory or document ty
 it('can create document with multiple categories', function () {
     $workAreasCategory = Category::query()->where('key', 'work_areas')->first();
     $generalCategory = Category::query()->where('key', 'general')->first();
-    $gvp = Gvp::factory()->create();
+    $workArea = WorkArea::factory()->create();
     $documentType = DocumentType::query()->where('key', 'operating_instructions')->first();
 
     $subcategory = Subcategory::create([
         'category_id' => $workAreasCategory->id,
-        'source_type' => Gvp::class,
-        'source_id' => $gvp->id,
+        'source_type' => WorkArea::class,
+        'source_id' => $workArea->id,
     ]);
 
     $document = Document::factory()->create();
@@ -115,13 +115,13 @@ it('can create document with multiple categories', function () {
 
 it('enforces unique constraint on document assignments with document type', function () {
     $workAreasCategory = Category::query()->where('key', 'work_areas')->first();
-    $gvp = Gvp::factory()->create();
+    $workArea = WorkArea::factory()->create();
     $documentType = DocumentType::query()->where('key', 'risk_assessment')->first();
 
     $subcategory = Subcategory::create([
         'category_id' => $workAreasCategory->id,
-        'source_type' => Gvp::class,
-        'source_id' => $gvp->id,
+        'source_type' => WorkArea::class,
+        'source_id' => $workArea->id,
     ]);
 
     $document = Document::factory()->create();
@@ -143,13 +143,13 @@ it('enforces unique constraint on document assignments with document type', func
 
 it('shows document types in work areas category view', function () {
     $workAreasCategory = Category::query()->where('key', 'work_areas')->first();
-    $gvp = Gvp::factory()->create();
+    $workArea = WorkArea::factory()->create();
     $documentType = DocumentType::query()->where('key', 'risk_assessment')->first();
 
     $subcategory = Subcategory::create([
         'category_id' => $workAreasCategory->id,
-        'source_type' => Gvp::class,
-        'source_id' => $gvp->id,
+        'source_type' => WorkArea::class,
+        'source_id' => $workArea->id,
     ]);
 
     Volt::test('apps.mein-arbeitsschutz.documents.show', $workAreasCategory->key)
