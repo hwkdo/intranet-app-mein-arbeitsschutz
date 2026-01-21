@@ -25,6 +25,7 @@ class IntranetAppMeinArbeitsschutzServiceProvider extends PackageServiceProvider
             ->name('intranet-app-mein-arbeitsschutz')
             ->hasConfigFile()
             ->hasViews()
+            ->hasAssets()
             ->discoversMigrations();
     }
 

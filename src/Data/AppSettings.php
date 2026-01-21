@@ -19,5 +19,8 @@ class AppSettings extends BaseAppSettings
 
         #[Description('OpenWebUi-Collection-ID für KI Ablage der hochgeladenen Dokumente')]
         public string $openWebUiCollectionId = 'b513b09b-2e3d-43a8-8213-bc120395913a',
+
+        #[Description('OpenWebUi-Modell für KI Chat')]
+        public string $openWebUiModel = 'Intranet-App-Mein-Arbeitsschutz',
     ) {}
 }
