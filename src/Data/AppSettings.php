@@ -17,7 +17,7 @@ class AppSettings extends BaseAppSettings
         #[Description('Standard-Theme für die App')]
         public string $defaultTheme = 'light',
 
-        #[Description('Liste der erlaubten Bereiche')]
-        public array $allowedAreas = ['public', 'private'],
+        #[Description('OpenWebUi-Collection-ID für KI Ablage der hochgeladenen Dokumente')]
+        public string $openWebUiCollectionId = 'b513b09b-2e3d-43a8-8213-bc120395913a',
     ) {}
 }

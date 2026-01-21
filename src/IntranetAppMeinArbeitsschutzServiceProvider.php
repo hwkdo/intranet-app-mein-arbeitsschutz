@@ -2,9 +2,15 @@
 
 namespace Hwkdo\IntranetAppMeinArbeitsschutz;
 
-use Livewire\Volt\Volt;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Events\DocumentDeleted;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Events\DocumentUploaded;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Listeners\DeleteDocumentFromOpenWebUi;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Listeners\UploadDocumentToOpenWebUi;
+use Illuminate\Support\Facades\Event;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Commands\IntranetAppMeinArbeitsschutzCommand;
+use Livewire\Volt\Volt;
 
 class IntranetAppMeinArbeitsschutzServiceProvider extends PackageServiceProvider
 {
@@ -26,11 +32,20 @@ class IntranetAppMeinArbeitsschutzServiceProvider extends PackageServiceProvider
     {
         parent::boot();
         // Gate::policy(Raum::class, RaumPolicy::class);
-        $this->app->booted(function () {
-            Volt::mount(__DIR__.'/../resources/views/livewire');
+        $this->app->booted( function() {
+            Volt::mount(__DIR__.'/../resources/views/livewire');                        
         });
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
+        Event::listen(
+            DocumentUploaded::class,
+            UploadDocumentToOpenWebUi::class
+        );
+
+        Event::listen(
+            DocumentDeleted::class,
+            DeleteDocumentFromOpenWebUi::class
+        );
     }
 
     public function register(): void

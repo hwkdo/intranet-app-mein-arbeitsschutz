@@ -2,6 +2,8 @@
 
 use App\Models\Standort;
 use Flux\Flux;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Events\DocumentDeleted;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Events\DocumentUploaded;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Category;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Document;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\DocumentAssignment;
@@ -336,6 +338,11 @@ $saveUploads = function () {
             ->usingFileName($uploadFile->getClientOriginalName())
             ->toMediaCollection('documents');
 
+        $media = $document->getFirstMedia('documents');
+        if ($media) {
+            event(new DocumentUploaded($document, $media));
+        }
+
         // Kategorien ohne Unterkategorien (z.B. "Allgemeine Dokumente")
         $selectedCategoryIds = is_array($this->selectedCategoryIds) ? $this->selectedCategoryIds : [];
         foreach ($selectedCategoryIds as $categoryId) {
@@ -452,6 +459,12 @@ $deleteDocument = function (int $documentId): void {
 
         return;
     }
+
+    // Speichere die File-ID vor dem Löschen
+    $openwebuiFileId = $document->openwebui_file_id;
+
+    // Feuere Event vor dem Löschen, damit die File-ID noch verfügbar ist
+    event(new DocumentDeleted($document->id, $openwebuiFileId));
 
     $document->delete();
 
