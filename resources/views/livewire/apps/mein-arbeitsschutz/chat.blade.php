@@ -44,12 +44,13 @@ $hasApiKey = computed(function () {
 
 <x-intranet-app-mein-arbeitsschutz::mein-arbeitsschutz-layout heading="Chat" subheading="KI-Chat für Arbeitsschutz-Dokumente">
     @if ($this->hasApiKey)
-        <x-intranet-app-base::openwebui-chat 
-            :api-key="$this->apiKey"
-            :model="$this->model"
-            :endpoint="$this->endpoint"
-            height="600px"
-        />
+        <div class="h-[800px]">
+            @livewire('open-web-ui-chat', [
+                'model' => $this->model,
+                'apiKey' => $this->apiKey,
+                'endpoint' => $this->endpoint,
+            ])
+        </div>
     @else
         <flux:card>
             <flux:callout variant="warning" class="mb-4">
@@ -58,9 +59,9 @@ $hasApiKey = computed(function () {
                     Um den Chat zu nutzen, müssen Sie einen OpenWebUI API-Token in Ihren globalen Einstellungen konfigurieren.
                 </flux:text>
             </flux:callout>
-            
-            <flux:button 
-                variant="primary" 
+
+            <flux:button
+                variant="primary"
                 href="{{ route('settings.all') }}"
             >
                 Zu den Einstellungen
