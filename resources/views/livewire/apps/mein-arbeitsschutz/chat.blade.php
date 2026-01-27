@@ -30,10 +30,8 @@ $model = computed(function () {
     return $this->appSettings?->openWebUiModel ?? config('openwebui-api-laravel.default_model', 'gpt-oss:20b');
 });
 
-$endpoint = computed(function () {
-    $baseUrl = config('openwebui-api-laravel.base_api_url', 'https://chat.ai.hwk-do.com/api');
-    
-    return rtrim($baseUrl, '/').'/chat/completions';
+$baseUrl = computed(function () {
+    return config('openwebui-api-laravel.base_api_url', 'https://chat.ai.hwk-do.com/api');
 });
 
 $hasApiKey = computed(function () {
@@ -44,13 +42,14 @@ $hasApiKey = computed(function () {
 
 <x-intranet-app-mein-arbeitsschutz::mein-arbeitsschutz-layout heading="Chat" subheading="KI-Chat für Arbeitsschutz-Dokumente">
     @if ($this->hasApiKey)
-        <div class="h-[800px]">
-            @livewire('open-web-ui-chat', [
-                'model' => $this->model,
-                'apiKey' => $this->apiKey,
-                'endpoint' => $this->endpoint,
-            ])
-        </div>
+        @livewire('prism-chat', [
+            'appIdentifier' => 'mein-arbeitsschutz',
+            'model' => $this->model,
+            'apiKey' => $this->apiKey,
+            'baseUrl' => $this->baseUrl,
+            'useMcpTools' => false,
+            'provider' => 'openwebui-completions'
+        ])
     @else
         <flux:card>
             <flux:callout variant="warning" class="mb-4">

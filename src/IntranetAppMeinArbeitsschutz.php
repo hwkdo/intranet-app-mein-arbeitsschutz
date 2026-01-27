@@ -41,4 +41,9 @@ class IntranetAppMeinArbeitsschutz implements IntranetAppInterface
     {
         return \Hwkdo\IntranetAppMeinArbeitsschutz\Data\AppSettings::class;
     }
+
+    public static function mcpServers(): array
+    {
+        return [];
+    }
 }
