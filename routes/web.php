@@ -26,6 +26,7 @@ Route::middleware(['web','auth','can:see-app-mein-arbeitsschutz'])->group(functi
 
         return response()->file($media->getPath('thumb'));
     })->name('apps.mein-arbeitsschutz.documents.thumb');
+    Volt::route('apps/mein-arbeitsschutz/suche', 'apps.mein-arbeitsschutz.search')->name('apps.mein-arbeitsschutz.search');
     Volt::route('apps/mein-arbeitsschutz/example', 'apps.mein-arbeitsschutz.example')->name('apps.mein-arbeitsschutz.example');    
     Volt::route('apps/mein-arbeitsschutz/chat', 'apps.mein-arbeitsschutz.chat')->name('apps.mein-arbeitsschutz.chat');
     Volt::route('apps/mein-arbeitsschutz/settings/user', 'apps.mein-arbeitsschutz.settings.user')->name('apps.mein-arbeitsschutz.settings.user');

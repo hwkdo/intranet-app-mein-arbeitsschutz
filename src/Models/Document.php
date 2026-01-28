@@ -11,15 +11,34 @@ use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Laravel\Scout\Searchable;
+
 
 class Document extends Model implements HasMedia
 {
     use HasFactory;
     use InteractsWithMedia;
+    use Searchable;
 
     protected $table = 'intranet_app_mein_arbeitsschutz_documents';
 
     protected $guarded = [];
+
+    public function searchableAs(): string
+    {
+        return 'mein_arbeitsschutz_documents';
+    }
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'description' => $this->description,
+            'uploaded_by' => $this->uploaded_by,
+            'created_at' => $this->created_at?->timestamp,
+        ];
+    }
 
     public function assignments(): HasMany
     {

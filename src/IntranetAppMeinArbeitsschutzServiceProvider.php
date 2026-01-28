@@ -6,6 +6,8 @@ use Hwkdo\IntranetAppMeinArbeitsschutz\Events\DocumentDeleted;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Events\DocumentUploaded;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Listeners\DeleteDocumentFromOpenWebUi;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Listeners\UploadDocumentToOpenWebUi;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Document;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -47,6 +49,31 @@ class IntranetAppMeinArbeitsschutzServiceProvider extends PackageServiceProvider
             DocumentDeleted::class,
             DeleteDocumentFromOpenWebUi::class
         );
+
+        $this->configureMeilisearchIndexSettings();
+    }
+
+    protected function configureMeilisearchIndexSettings(): void
+    {
+        $indexSettings = Config::get('scout.meilisearch.index-settings', []);
+        
+        $indexSettings[Document::class] = [
+            'filterableAttributes' => [
+                'id',
+                'uploaded_by',
+                'created_at',
+            ],
+            'sortableAttributes' => [
+                'title',
+                'created_at',
+            ],
+            'searchableAttributes' => [
+                'title',
+                'description',
+            ],
+        ];
+
+        Config::set('scout.meilisearch.index-settings', $indexSettings);
     }
 
     public function register(): void
