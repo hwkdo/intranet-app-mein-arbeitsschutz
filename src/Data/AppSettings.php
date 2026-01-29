@@ -22,5 +22,8 @@ class AppSettings extends BaseAppSettings
 
         #[Description('OpenWebUi-Modell für KI Chat')]
         public string $openWebUiModel = 'Intranet-App-Mein-Arbeitsschutz',
+
+        #[Description('Route-Name der Startseite (z.B. apps.mein-arbeitsschutz.documents). Wenn nicht gesetzt, wird die Standard-Übersicht verwendet.')]
+        public ?string $startPageRoute = null,
     ) {}
 }

@@ -49,6 +49,7 @@ state([
     'workAreaSortOrder' => 0,
     'showWorkAreaModal' => false,
     'editingWorkAreaId' => null,
+    'startPageRoute' => null,
 ]);
 
 rules([
@@ -81,6 +82,12 @@ mount(function () {
             ->pluck('source_id')
             ->map(fn ($id) => (int) $id)
             ->all();
+    }
+
+    // Lade aktuelle Startseiten-Konfiguration
+    $settingsModel = \Hwkdo\IntranetAppMeinArbeitsschutz\Models\IntranetAppMeinArbeitsschutzSettings::current();
+    if ($settingsModel && $settingsModel->settings) {
+        $this->startPageRoute = $settingsModel->settings->startPageRoute;
     }
 });
 
@@ -652,6 +659,54 @@ $deleteWorkArea = function (int $id): void {
     Flux::toast(text: 'Arbeitsbereich gelöscht.', variant: 'success');
 };
 
+$availableRoutes = computed(function () {
+    $defaultNavItems = [
+        ['label' => 'Übersicht', 'href' => route('apps.mein-arbeitsschutz.index'), 'route' => 'apps.mein-arbeitsschutz.index'],
+        ['label' => 'Dokumente', 'href' => route('apps.mein-arbeitsschutz.documents'), 'route' => 'apps.mein-arbeitsschutz.documents'],
+        ['label' => 'Suche', 'href' => route('apps.mein-arbeitsschutz.search'), 'route' => 'apps.mein-arbeitsschutz.search'],
+        ['label' => 'Chat', 'href' => route('apps.mein-arbeitsschutz.chat'), 'route' => 'apps.mein-arbeitsschutz.chat'],
+        ['label' => 'Meine Einstellungen', 'href' => route('apps.mein-arbeitsschutz.settings.user'), 'route' => 'apps.mein-arbeitsschutz.settings.user'],
+    ];
+
+    return collect($defaultNavItems)->mapWithKeys(function ($item) {
+        return [$item['route'] => $item['label']];
+    })->toArray();
+});
+
+$saveStartPage = function (): void {
+    $settingsModel = \Hwkdo\IntranetAppMeinArbeitsschutz\Models\IntranetAppMeinArbeitsschutzSettings::current();
+    $appSettingsClass = \Hwkdo\IntranetAppMeinArbeitsschutz\Data\AppSettings::class;
+
+    if (!$settingsModel) {
+        // Erstelle neue Settings
+        $settingsModel = \Hwkdo\IntranetAppMeinArbeitsschutz\Models\IntranetAppMeinArbeitsschutzSettings::create([
+            'version' => 1,
+            'settings' => new $appSettingsClass(startPageRoute: $this->startPageRoute ?: null),
+        ]);
+    } else {
+        // Aktualisiere bestehende Settings
+        $currentSettings = $settingsModel->settings;
+        $settingsArray = $currentSettings->toArray();
+        $settingsArray['startPageRoute'] = $this->startPageRoute ?: null;
+        $settingsModel->settings = $appSettingsClass::from($settingsArray);
+        $settingsModel->save();
+    }
+
+    // Cache für alle Benutzer leeren, da die Startseite global ist
+    // Lösche alle user-apps-* Cache-Keys
+    $cachePrefix = 'user-apps-';
+    $users = \App\Models\User::pluck('id');
+    foreach ($users as $userId) {
+        \Illuminate\Support\Facades\Cache::forget($cachePrefix.$userId);
+    }
+
+    Flux::toast(
+        heading: 'Startseite gespeichert',
+        text: 'Die Startseiten-Konfiguration wurde erfolgreich aktualisiert.',
+        variant: 'success'
+    );
+};
+
 ?>
 <div>
 <x-intranet-app-mein-arbeitsschutz::mein-arbeitsschutz-layout heading="MeinArbeitsschutz App" subheading="Admin">
@@ -661,6 +716,7 @@ $deleteWorkArea = function (int $id): void {
             <flux:tab name="dokumente" icon="document-text">Dokumente</flux:tab>
             <flux:tab name="arbeitsbereiche" icon="wrench-screwdriver">Arbeitsbereiche</flux:tab>
             <flux:tab name="markierungen" icon="map-pin">Markierungen</flux:tab>
+            <flux:tab name="startseite" icon="home">Startseite</flux:tab>
             <flux:tab name="einstellungen" icon="cog-6-tooth">Einstellungen</flux:tab>
         </flux:tabs>
 
@@ -820,7 +876,7 @@ $deleteWorkArea = function (int $id): void {
                                                     class="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
                                                 />
                                                 <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                                                    {{ $subcategory->source?->name ?? $subcategory->source?->bezeichnung ?? 'Unbekannt' }}
+                                                    {{ $subcategory->source?->name ?? $subcategory->source?->bezeichnung }}
                                                 </span>
                                             </label>
                                         @endforeach
@@ -1195,6 +1251,36 @@ $deleteWorkArea = function (int $id): void {
             </flux:card>
         </flux:tab.panel>
 
+        <flux:tab.panel name="startseite">
+            <flux:card>
+                <flux:heading size="lg" class="mb-4">Startseite konfigurieren</flux:heading>
+                <flux:text class="mb-6">
+                    Legen Sie fest, welche Seite beim Öffnen der App angezeigt werden soll. Wenn keine Startseite ausgewählt wird, wird die Standard-Übersicht verwendet.
+                </flux:text>
+
+                <form wire:submit="saveStartPage" class="space-y-6">
+                    <flux:select
+                        wire:model="startPageRoute"
+                        variant="listbox"
+                        label="Startseite"
+                        description="Wählen Sie die Seite aus, die beim Öffnen der App angezeigt werden soll."
+                        placeholder="Standard-Übersicht verwenden"
+                    >
+                        <flux:select.option value="">Standard-Übersicht</flux:select.option>
+                        @foreach($this->availableRoutes as $route => $label)
+                            <flux:select.option value="{{ $route }}">{{ $label }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+
+                    <div class="flex gap-2">
+                        <flux:button type="submit" variant="primary" icon="check">
+                            Startseite speichern
+                        </flux:button>
+                    </div>
+                </form>
+            </flux:card>
+        </flux:tab.panel>
+
         <flux:tab.panel name="einstellungen">
             <div style="min-height: 400px;">
                 @livewire('intranet-app-base::admin-settings', [
@@ -1270,7 +1356,7 @@ $deleteWorkArea = function (int $id): void {
                                             class="h-4 w-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
                                         />
                                         <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                                            {{ $subcategory->source?->name ?? $subcategory->source?->bezeichnung ?? 'Unbekannt' }}
+                                            {{ $subcategory->source?->name ?? $subcategory->source?->bezeichnung }}
                                         </span>
                                     </label>
                                 @endforeach
