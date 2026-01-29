@@ -137,7 +137,7 @@ $clearDocumentTypeSelection = function (): void {
                             </flux:button>
                         @endif
                         @foreach($this->subcategories as $subcategory)
-                            @php($subcategoryLabel = $subcategory->source?->name ?? $subcategory->source?->bezeichnung ?? 'Unbekannt')
+                            @php($subcategoryLabel = $subcategory->source?->name ?? $subcategory->source?->bezeichnung)
                             @php($isWorkArea = $subcategory->source instanceof \Hwkdo\IntranetAppMeinArbeitsschutz\Models\WorkArea)
                             @php($hasIcon = $isWorkArea && $subcategory->source->hasIcon())
                             @php($iconUrl = $hasIcon ? $subcategory->source->getIconUrl() : null)
@@ -168,7 +168,7 @@ $clearDocumentTypeSelection = function (): void {
                 @else
                     @php($selectedSubcategoryId = $this->selectedSubcategoryId)
                     @php($selectedSubcategory = $selectedSubcategoryId > 0 ? $this->subcategories->firstWhere('id', $selectedSubcategoryId) : null)
-                    @php($selectedLabel = $selectedSubcategoryId === 0 ? 'Ohne Unterkategorie' : ($selectedSubcategory?->source?->name ?? $selectedSubcategory?->source?->bezeichnung ?? 'Unbekannt'))
+                    @php($selectedLabel = $selectedSubcategoryId === 0 ? 'Ohne Unterkategorie' : ($selectedSubcategory?->source?->name ?? $selectedSubcategory?->source?->bezeichnung))
 
                     @if($isWorkAreas && $selectedSubcategoryId > 0)
                         @if($this->selectedDocumentTypeId === null)
