@@ -15,6 +15,7 @@ return [
             'permissions' => [
                 'see-app-mein-arbeitsschutz',
             ],
+            'all_users' => true,  // Alle aktiven User bekommen automatisch diese Rolle
         ],
     ],
 ];
