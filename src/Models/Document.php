@@ -40,6 +40,13 @@ class Document extends Model implements HasMedia
         ];
     }
 
+    public function typesenseSearchParameters(): array
+    {
+        return [
+            'infix' => 'always',  // oder 'always,always' wenn query_by = title,description (ein Wert pro Feld)
+        ];
+    }
+
     public function assignments(): HasMany
     {
         return $this->hasMany(DocumentAssignment::class, 'document_id');
