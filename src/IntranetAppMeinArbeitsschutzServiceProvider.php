@@ -9,10 +9,9 @@ use Hwkdo\IntranetAppMeinArbeitsschutz\Listeners\UploadDocumentToOpenWebUi;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Document;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
+use Livewire\Volt\Volt;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Hwkdo\IntranetAppMeinArbeitsschutz\Commands\IntranetAppMeinArbeitsschutzCommand;
-use Livewire\Volt\Volt;
 
 class IntranetAppMeinArbeitsschutzServiceProvider extends PackageServiceProvider
 {
@@ -35,8 +34,8 @@ class IntranetAppMeinArbeitsschutzServiceProvider extends PackageServiceProvider
     {
         parent::boot();
         // Gate::policy(Raum::class, RaumPolicy::class);
-        $this->app->booted( function() {
-            Volt::mount(__DIR__.'/../resources/views/livewire');                        
+        $this->app->booted(function () {
+            Volt::mount(__DIR__.'/../resources/views/livewire');
         });
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
@@ -56,7 +55,7 @@ class IntranetAppMeinArbeitsschutzServiceProvider extends PackageServiceProvider
     protected function configureMeilisearchIndexSettings(): void
     {
         $indexSettings = Config::get('scout.meilisearch.index-settings', []);
-        
+
         $indexSettings[Document::class] = [
             'filterableAttributes' => [
                 'id',

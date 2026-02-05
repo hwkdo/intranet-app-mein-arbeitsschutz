@@ -2,6 +2,7 @@
 
 use App\Models\Standort;
 use Flux\Flux;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Enums\ViewModeEnum;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Events\DocumentDeleted;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Events\DocumentUploaded;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Category;
@@ -50,6 +51,15 @@ state([
     'showWorkAreaModal' => false,
     'editingWorkAreaId' => null,
     'startPageRoute' => null,
+    'viewModeSearch' => 'grid',
+    'viewModeGeneral' => 'grid',
+    'viewModeFirstAid' => 'grid',
+    'viewModeWorkAreas' => [
+        'risk_assessment' => 'grid',
+        'operating_instructions' => 'grid',
+        'hazardous_substances' => 'grid',
+        'safety_data_sheets' => 'grid',
+    ],
 ]);
 
 rules([
@@ -84,10 +94,14 @@ mount(function () {
             ->all();
     }
 
-    // Lade aktuelle Startseiten-Konfiguration
+    // Lade aktuelle Startseiten- und Ansichts-Konfiguration
     $settingsModel = \Hwkdo\IntranetAppMeinArbeitsschutz\Models\IntranetAppMeinArbeitsschutzSettings::current();
     if ($settingsModel && $settingsModel->settings) {
         $this->startPageRoute = $settingsModel->settings->startPageRoute;
+        $this->viewModeSearch = $settingsModel->settings->viewModeSearch->value;
+        $this->viewModeGeneral = $settingsModel->settings->viewModeGeneral->value;
+        $this->viewModeFirstAid = $settingsModel->settings->viewModeFirstAid->value;
+        $this->viewModeWorkAreas = $settingsModel->settings->viewModeWorkAreas;
     }
 });
 
@@ -707,6 +721,38 @@ $saveStartPage = function (): void {
     );
 };
 
+$saveViewSettings = function (): void {
+    $settingsModel = \Hwkdo\IntranetAppMeinArbeitsschutz\Models\IntranetAppMeinArbeitsschutzSettings::current();
+    $appSettingsClass = \Hwkdo\IntranetAppMeinArbeitsschutz\Data\AppSettings::class;
+
+    if (! $settingsModel) {
+        $settingsModel = \Hwkdo\IntranetAppMeinArbeitsschutz\Models\IntranetAppMeinArbeitsschutzSettings::create([
+            'version' => 1,
+            'settings' => new $appSettingsClass(
+                viewModeSearch: ViewModeEnum::from($this->viewModeSearch),
+                viewModeGeneral: ViewModeEnum::from($this->viewModeGeneral),
+                viewModeFirstAid: ViewModeEnum::from($this->viewModeFirstAid),
+                viewModeWorkAreas: $this->viewModeWorkAreas
+            ),
+        ]);
+    } else {
+        $currentSettings = $settingsModel->settings;
+        $settingsArray = $currentSettings->toArray();
+        $settingsArray['viewModeSearch'] = ViewModeEnum::from($this->viewModeSearch);
+        $settingsArray['viewModeGeneral'] = ViewModeEnum::from($this->viewModeGeneral);
+        $settingsArray['viewModeFirstAid'] = ViewModeEnum::from($this->viewModeFirstAid);
+        $settingsArray['viewModeWorkAreas'] = $this->viewModeWorkAreas;
+        $settingsModel->settings = $appSettingsClass::from($settingsArray);
+        $settingsModel->save();
+    }
+
+    Flux::toast(
+        heading: 'Ansicht gespeichert',
+        text: 'Die Ansichtseinstellungen wurden erfolgreich aktualisiert.',
+        variant: 'success'
+    );
+};
+
 ?>
 <div>
 <x-intranet-app-mein-arbeitsschutz::mein-arbeitsschutz-layout heading="MeinArbeitsschutz App" subheading="Admin">
@@ -717,6 +763,7 @@ $saveStartPage = function (): void {
             <flux:tab name="arbeitsbereiche" icon="wrench-screwdriver">Arbeitsbereiche</flux:tab>
             <flux:tab name="markierungen" icon="map-pin">Markierungen</flux:tab>
             <flux:tab name="startseite" icon="home">Startseite</flux:tab>
+            <flux:tab name="ansicht" icon="squares-2x2">Ansicht</flux:tab>
             <flux:tab name="einstellungen" icon="cog-6-tooth">Einstellungen</flux:tab>
         </flux:tabs>
 
@@ -1275,6 +1322,82 @@ $saveStartPage = function (): void {
                     <div class="flex gap-2">
                         <flux:button type="submit" variant="primary" icon="check">
                             Startseite speichern
+                        </flux:button>
+                    </div>
+                </form>
+            </flux:card>
+        </flux:tab.panel>
+
+        <flux:tab.panel name="ansicht">
+            <flux:card>
+                <flux:heading size="lg" class="mb-4">Ansicht konfigurieren</flux:heading>
+                <flux:text class="mb-6">
+                    Legen Sie fest, ob Dokumente als Raster oder als Tabelle angezeigt werden sollen.
+                </flux:text>
+
+                <form wire:submit="saveViewSettings" class="space-y-8">
+                    <div class="space-y-4">
+                        <flux:heading size="md">Suchergebnis</flux:heading>
+                        <flux:select
+                            wire:model="viewModeSearch"
+                            variant="listbox"
+                            label="Ansicht für Suchergebnisse"
+                        >
+                            @foreach(\Hwkdo\IntranetAppMeinArbeitsschutz\Enums\ViewModeEnum::options() as $value => $label)
+                                <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+                    </div>
+
+                    <div class="space-y-4">
+                        <flux:heading size="md">Allgemeine Dokumente</flux:heading>
+                        <flux:select
+                            wire:model="viewModeGeneral"
+                            variant="listbox"
+                            label="Ansicht für Allgemeine Dokumente"
+                        >
+                            @foreach(\Hwkdo\IntranetAppMeinArbeitsschutz\Enums\ViewModeEnum::options() as $value => $label)
+                                <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+                    </div>
+
+                    <div class="space-y-4">
+                        <flux:heading size="md">Notsituation/Erste Hilfe</flux:heading>
+                        <flux:select
+                            wire:model="viewModeFirstAid"
+                            variant="listbox"
+                            label="Ansicht für Notsituation/Erste Hilfe"
+                        >
+                            @foreach(\Hwkdo\IntranetAppMeinArbeitsschutz\Enums\ViewModeEnum::options() as $value => $label)
+                                <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+                    </div>
+
+                    <div class="space-y-4">
+                        <flux:heading size="md">Arbeitsbereiche (nach Dokumenttyp)</flux:heading>
+                        <flux:text class="text-sm text-zinc-500">
+                            Konfigurieren Sie die Ansicht für jeden Dokumenttyp in den Arbeitsbereichen.
+                        </flux:text>
+                        <div class="space-y-4">
+                            @foreach($this->documentTypes as $documentType)
+                                <flux:select
+                                    wire:model="viewModeWorkAreas.{{ $documentType->key }}"
+                                    variant="listbox"
+                                    :label="$documentType->label"
+                                >
+                                    @foreach(\Hwkdo\IntranetAppMeinArbeitsschutz\Enums\ViewModeEnum::options() as $value => $label)
+                                        <flux:select.option value="{{ $value }}">{{ $label }}</flux:select.option>
+                                    @endforeach
+                                </flux:select>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <flux:button type="submit" variant="primary" icon="check">
+                            Ansicht speichern
                         </flux:button>
                     </div>
                 </form>

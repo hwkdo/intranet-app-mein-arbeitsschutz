@@ -1,8 +1,10 @@
 <?php
 
+use Hwkdo\IntranetAppMeinArbeitsschutz\Enums\ViewModeEnum;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Category;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Document;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\DocumentType;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Models\IntranetAppMeinArbeitsschutzSettings;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Subcategory;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\WorkArea;
 use function Livewire\Volt\{computed, mount, state, title};
@@ -99,6 +101,35 @@ $clearSelection = function (): void {
 $clearDocumentTypeSelection = function (): void {
     $this->selectedDocumentTypeId = null;
 };
+
+$currentViewMode = computed(function () {
+    $settingsModel = IntranetAppMeinArbeitsschutzSettings::current();
+    if (! $settingsModel?->settings) {
+        return ViewModeEnum::Grid;
+    }
+
+    $settings = $settingsModel->settings;
+
+    switch ($this->category->key) {
+        case 'general':
+            return $settings->viewModeGeneral;
+        case 'first_aid':
+            return $settings->viewModeFirstAid;
+        case 'work_areas':
+            if ($this->selectedDocumentTypeId) {
+                $docType = DocumentType::find($this->selectedDocumentTypeId);
+                if ($docType) {
+                    $modeValue = $settings->viewModeWorkAreas[$docType->key] ?? 'grid';
+
+                    return ViewModeEnum::from($modeValue);
+                }
+            }
+
+            return ViewModeEnum::Grid;
+        default:
+            return ViewModeEnum::Grid;
+    }
+});
 
 ?>
 <div>
@@ -216,41 +247,10 @@ $clearDocumentTypeSelection = function (): void {
                                     </flux:button>
                                 </div>
 
-                                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                    @forelse($selectedDocuments as $document)
-                                        <flux:card class="flex gap-4">
-                                            @php($media = $document->getFirstMedia('documents'))
-                                            @php($thumbnail = $media && $media->hasGeneratedConversion('thumb') ? route('apps.mein-arbeitsschutz.documents.thumb', $document) : null)
-                                            @php($fileUrl = route('apps.mein-arbeitsschutz.documents.download', $document))
-                                            <div class="h-24 w-20 flex-shrink-0 overflow-hidden rounded-lg border bg-white dark:bg-zinc-900">
-                                                @if($thumbnail)
-                                                    <img src="{{ $thumbnail }}" alt="{{ $document->title }}" class="h-full w-full object-cover" />
-                                                @else
-                                                    <div class="flex h-full w-full items-center justify-center">
-                                                        <flux:icon icon="document-text" class="h-6 w-6 text-zinc-400" />
-                                                    </div>
-                                                @endif
-                                            </div>
-                                            <div class="flex flex-1 flex-col gap-2">
-                                                <flux:heading size="sm">{{ $document->title }}</flux:heading>
-                                                @if($document->description)
-                                                    <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">
-                                                        {{ $document->description }}
-                                                    </flux:text>
-                                                @endif
-                                                @if($fileUrl)
-                                                    <flux:button href="{{ $fileUrl }}" variant="primary" size="sm" icon="arrow-down-tray">
-                                                        Download
-                                                    </flux:button>
-                                                @endif
-                                            </div>
-                                        </flux:card>
-                                    @empty
-                                        <flux:text class="text-sm text-zinc-500">
-                                            Keine Dokumente vorhanden.
-                                        </flux:text>
-                                    @endforelse
-                                </div>
+                                <x-intranet-app-mein-arbeitsschutz::document-list
+                                    :documents="$selectedDocuments"
+                                    :viewMode="$this->currentViewMode->value"
+                                />
                             </div>
                         @endif
                     @else
@@ -263,80 +263,18 @@ $clearDocumentTypeSelection = function (): void {
                             </flux:button>
                         </div>
 
-                        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            @forelse($selectedDocuments as $document)
-                                <flux:card class="flex gap-4">
-                                    @php($media = $document->getFirstMedia('documents'))
-                                    @php($thumbnail = $media && $media->hasGeneratedConversion('thumb') ? route('apps.mein-arbeitsschutz.documents.thumb', $document) : null)
-                                    @php($fileUrl = route('apps.mein-arbeitsschutz.documents.download', $document))
-                                    <div class="h-24 w-20 flex-shrink-0 overflow-hidden rounded-lg border bg-white dark:bg-zinc-900">
-                                        @if($thumbnail)
-                                            <img src="{{ $thumbnail }}" alt="{{ $document->title }}" class="h-full w-full object-cover" />
-                                        @else
-                                            <div class="flex h-full w-full items-center justify-center">
-                                                <flux:icon icon="document-text" class="h-6 w-6 text-zinc-400" />
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="flex flex-1 flex-col gap-2">
-                                        <flux:heading size="sm">{{ $document->title }}</flux:heading>
-                                        @if($document->description)
-                                            <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">
-                                                {{ $document->description }}
-                                            </flux:text>
-                                        @endif
-                                        @if($fileUrl)
-                                            <flux:button href="{{ $fileUrl }}" variant="primary" size="sm" icon="arrow-down-tray">
-                                                Download
-                                            </flux:button>
-                                        @endif
-                                    </div>
-                                </flux:card>
-                            @empty
-                                <flux:text class="text-sm text-zinc-500">
-                                    Keine Dokumente vorhanden.
-                                </flux:text>
-                            @endforelse
-                        </div>
+                        <x-intranet-app-mein-arbeitsschutz::document-list
+                            :documents="$selectedDocuments"
+                            :viewMode="$this->currentViewMode->value"
+                        />
                     @endif
                 @endif
             </div>
         @else
-            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                @forelse($categoryDocuments as $document)
-                    <flux:card class="flex gap-4">
-                        @php($media = $document->getFirstMedia('documents'))
-                        @php($thumbnail = $media && $media->hasGeneratedConversion('thumb') ? route('apps.mein-arbeitsschutz.documents.thumb', $document) : null)
-                        @php($fileUrl = route('apps.mein-arbeitsschutz.documents.download', $document))
-                        <div class="h-24 w-20 flex-shrink-0 overflow-hidden rounded-lg border bg-white dark:bg-zinc-900">
-                            @if($thumbnail)
-                                <img src="{{ $thumbnail }}" alt="{{ $document->title }}" class="h-full w-full object-cover" />
-                            @else
-                                <div class="flex h-full w-full items-center justify-center">
-                                    <flux:icon icon="document-text" class="h-6 w-6 text-zinc-400" />
-                                </div>
-                            @endif
-                        </div>
-                        <div class="flex flex-1 flex-col gap-2">
-                            <flux:heading size="sm">{{ $document->title }}</flux:heading>
-                            @if($document->description)
-                                <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">
-                                    {{ $document->description }}
-                                </flux:text>
-                            @endif
-                            @if($fileUrl)
-                                <flux:button href="{{ $fileUrl }}" variant="primary" size="sm" icon="arrow-down-tray">
-                                    Download
-                                </flux:button>
-                            @endif
-                        </div>
-                    </flux:card>
-                @empty
-                    <flux:text class="text-sm text-zinc-500">
-                        Keine Dokumente vorhanden.
-                    </flux:text>
-                @endforelse
-            </div>
+            <x-intranet-app-mein-arbeitsschutz::document-list
+                :documents="$categoryDocuments"
+                :viewMode="$this->currentViewMode->value"
+            />
         @endif
     </div>
 </x-intranet-app-mein-arbeitsschutz::mein-arbeitsschutz-layout>
