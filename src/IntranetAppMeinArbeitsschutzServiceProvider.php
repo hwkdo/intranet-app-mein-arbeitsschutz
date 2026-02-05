@@ -49,31 +49,32 @@ class IntranetAppMeinArbeitsschutzServiceProvider extends PackageServiceProvider
             DeleteDocumentFromOpenWebUi::class
         );
 
-        $this->configureMeilisearchIndexSettings();
+        $this->configureTypesenseIndexSettings();
     }
 
-    protected function configureMeilisearchIndexSettings(): void
+    protected function configureTypesenseIndexSettings(): void
     {
-        $indexSettings = Config::get('scout.meilisearch.index-settings', []);
+        $modelSettings = Config::get('scout.typesense.model-settings', []);
 
-        $indexSettings[Document::class] = [
-            'filterableAttributes' => [
-                'id',
-                'uploaded_by',
-                'created_at',
+        $modelSettings[Document::class] = [
+            'collection-schema' => [
+                'fields' => [
+                    ['name' => 'id', 'type' => 'string'],
+                    ['name' => 'title', 'type' => 'string', 'infix' => true],
+                    ['name' => 'description', 'type' => 'string', 'infix' => true],
+                    ['name' => 'uploaded_by', 'type' => 'string'],
+                    ['name' => 'created_at', 'type' => 'int64'],
+                ],
+                'default_sorting_field' => 'created_at',
             ],
-            'sortableAttributes' => [
-                'title',
-                'created_at',
-            ],
-            'searchableAttributes' => [
-                'title',
-                'description',
+            'search-parameters' => [
+                'query_by' => 'title,description',
+                'prefix' => true,
             ],
         ];
 
-        Config::set('scout.meilisearch.index-settings', $indexSettings);
-    }
+        Config::set('scout.typesense.model-settings', $modelSettings);
+    }    
 
     public function register(): void
     {

@@ -32,10 +32,10 @@ class Document extends Model implements HasMedia
     public function toSearchableArray(): array
     {
         return [
-            'id' => $this->id,
+            'id' => (string) $this->id,
             'title' => $this->title,
-            'description' => $this->description,
-            'uploaded_by' => $this->uploaded_by,
+            'description' => $this->description ?? '',
+            'uploaded_by' => $this->uploadedBy->name,
             'created_at' => $this->created_at?->timestamp,
         ];
     }
