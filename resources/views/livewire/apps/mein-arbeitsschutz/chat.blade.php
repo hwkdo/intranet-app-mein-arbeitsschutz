@@ -51,7 +51,7 @@ $hasApiKey = computed(function () {
             'provider' => 'openwebui-completions'
         ])
     @else
-        <flux:card>
+        <flux:card class="glass-card">
             <flux:callout variant="warning" class="mb-4">
                 <flux:heading size="sm">API-Token fehlt</flux:heading>
                 <flux:text>

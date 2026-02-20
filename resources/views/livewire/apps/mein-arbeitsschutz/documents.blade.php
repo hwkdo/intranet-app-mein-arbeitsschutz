@@ -19,7 +19,7 @@ $categories = computed(function () {
             <a
                 href="{{ route('apps.mein-arbeitsschutz.documents.show', $category->key) }}"
                 wire:navigate
-                class="flex items-center gap-6 rounded-lg border border-zinc-200 bg-white p-6 text-left transition-all hover:border-zinc-300 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-zinc-600"
+                class="glass-card flex items-center gap-6 p-6 text-left transition-all hover:shadow-lg"
             >
                 <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900">
                     <flux:icon icon="{{ $category->icon }}" class="h-7 w-7 text-blue-600 dark:text-blue-300" />

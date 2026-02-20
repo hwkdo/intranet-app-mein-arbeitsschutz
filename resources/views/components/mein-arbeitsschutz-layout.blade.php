@@ -17,6 +17,12 @@
     $navItems = !empty($navItems) ? $navItems : $defaultNavItems;
 @endphp
 
+@push('app-styles')
+<style data-app-bg data-ts="{{ uniqid() }}">
+    :root { --app-bg-image: url('{{ asset('img/intranet-app-arbeitsschutz-bg.png') }}'); }
+</style>
+@endpush
+
 @if(request()->routeIs('apps.mein-arbeitsschutz.index'))
     <x-intranet-app-base::app-layout 
         app-identifier="mein-arbeitsschutz"

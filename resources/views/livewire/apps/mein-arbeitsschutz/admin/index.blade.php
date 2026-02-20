@@ -768,7 +768,7 @@ $saveViewSettings = function (): void {
         </flux:tabs>
 
         <flux:tab.panel name="uploads">
-            <flux:card>
+            <flux:card class="glass-card">
                 <flux:heading size="lg" class="mb-4">Dokumente hochladen</flux:heading>
                 <flux:text class="mb-6">
                     Laden Sie PDF-Dokumente hoch und ordnen Sie sie Kategorien oder Unterkategorien zu.
@@ -790,7 +790,7 @@ $saveViewSettings = function (): void {
                     </flux:field>
 
                     @if(!empty($this->uploadFiles))
-                        <flux:card class="space-y-4">
+                        <flux:card class="glass-card space-y-4">
                             <flux:heading size="md">Datei-Details</flux:heading>
                             <flux:accordion transition>
                                 @foreach($this->uploadFiles as $index => $file)
@@ -1005,7 +1005,7 @@ $saveViewSettings = function (): void {
         </flux:tab.panel>
 
         <flux:tab.panel name="dokumente">
-            <flux:card>
+            <flux:card class="glass-card">
                 <flux:heading size="lg" class="mb-4">Dokumente verwalten</flux:heading>
                 <flux:text class="mb-6">
                     Übersicht aller hochgeladenen Dokumente mit Bearbeitungs- und Löschfunktion.
@@ -1185,7 +1185,7 @@ $saveViewSettings = function (): void {
         </flux:tab.panel>
 
         <flux:tab.panel name="arbeitsbereiche">
-            <flux:card>
+            <flux:card class="glass-card">
                 <div class="mb-6 flex items-center justify-between">
                     <div>
                         <flux:heading size="lg" class="mb-2">Arbeitsbereiche verwalten</flux:heading>
@@ -1263,7 +1263,7 @@ $saveViewSettings = function (): void {
         </flux:tab.panel>
 
         <flux:tab.panel name="markierungen">
-            <flux:card>
+            <flux:card class="glass-card">
                 <flux:heading size="lg" class="mb-4">Unterkategorien markieren</flux:heading>
                 <flux:text class="mb-6">
                     Wählen Sie die Standorte aus, die als Unterkategorien für "Notsituation/Erste Hilfe" angezeigt werden sollen.
@@ -1299,7 +1299,7 @@ $saveViewSettings = function (): void {
         </flux:tab.panel>
 
         <flux:tab.panel name="startseite">
-            <flux:card>
+            <flux:card class="glass-card">
                 <flux:heading size="lg" class="mb-4">Startseite konfigurieren</flux:heading>
                 <flux:text class="mb-6">
                     Legen Sie fest, welche Seite beim Öffnen der App angezeigt werden soll. Wenn keine Startseite ausgewählt wird, wird die Standard-Übersicht verwendet.
@@ -1329,7 +1329,7 @@ $saveViewSettings = function (): void {
         </flux:tab.panel>
 
         <flux:tab.panel name="ansicht">
-            <flux:card>
+            <flux:card class="glass-card">
                 <flux:heading size="lg" class="mb-4">Ansicht konfigurieren</flux:heading>
                 <flux:text class="mb-6">
                     Legen Sie fest, ob Dokumente als Raster oder als Tabelle angezeigt werden sollen.

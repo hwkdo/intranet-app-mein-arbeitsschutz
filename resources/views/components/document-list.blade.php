@@ -8,6 +8,7 @@
 @endphp
 
 @if($isList)
+    <div class="glass-card overflow-hidden">
     <flux:table>
         <flux:table.columns>
             <flux:table.column class="w-24">Vorschau</flux:table.column>
@@ -36,7 +37,7 @@
                     </flux:table.cell>
                     <flux:table.cell>
                         @if($document->description)
-                            <div class="text-sm text-zinc-600 dark:text-zinc-400">
+                            <div class="text-sm text-zinc-600 dark:text-white/70">
                                 {{ Str::limit($document->description, 100) }}
                             </div>
                         @else
@@ -61,10 +62,11 @@
             @endforelse
         </flux:table.rows>
     </flux:table>
+    </div>
 @else
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         @forelse($documents as $document)
-            <flux:card class="flex gap-4">
+            <flux:card class="glass-card flex gap-4">
                 @php($media = $document->getFirstMedia('documents'))
                 @php($thumbnail = $media && $media->hasGeneratedConversion('thumb') ? route('apps.mein-arbeitsschutz.documents.thumb', $document) : null)
                 @php($fileUrl = route('apps.mein-arbeitsschutz.documents.download', $document))
@@ -80,7 +82,7 @@
                 <div class="flex flex-1 flex-col gap-2">
                     <flux:heading size="sm">{{ $document->title }}</flux:heading>
                     @if($document->description)
-                        <flux:text class="text-sm text-zinc-600 dark:text-zinc-400">
+                        <flux:text class="text-sm text-zinc-600 dark:text-white/70">
                             {{ $document->description }}
                         </flux:text>
                     @endif
