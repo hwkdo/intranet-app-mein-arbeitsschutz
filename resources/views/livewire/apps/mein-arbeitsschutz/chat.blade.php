@@ -31,7 +31,7 @@ $model = computed(function () {
 });
 
 $baseUrl = computed(function () {
-    return config('openwebui-api-laravel.base_api_url', 'https://chat.ai.hwk-do.com/api');
+    return config('openwebui-api-laravel.base_api_url_ollama', 'https://chat.ai.hwk-do.com/api');
 });
 
 $hasApiKey = computed(function () {

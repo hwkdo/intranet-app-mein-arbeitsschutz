@@ -17,11 +17,17 @@
     $navItems = !empty($navItems) ? $navItems : $defaultNavItems;
 @endphp
 
-@push('app-styles')
-<style data-app-bg data-ts="{{ uniqid() }}">
-    :root { --app-bg-image: url('{{ asset('img/intranet-app-arbeitsschutz-bg.png') }}'); }
-</style>
-@endpush
+@php
+    $customBgUrl = \Hwkdo\IntranetAppBase\Models\AppBackground::getCustomBackgroundUrl('mein-arbeitsschutz');
+@endphp
+
+@if($customBgUrl)
+    @push('app-styles')
+    <style data-app-bg data-ts="{{ uniqid() }}">
+        :root { --app-bg-image: url('{{ $customBgUrl }}'); }
+    </style>
+    @endpush
+@endif
 
 @if(request()->routeIs('apps.mein-arbeitsschutz.index'))
     <x-intranet-app-base::app-layout 

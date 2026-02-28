@@ -764,6 +764,7 @@ $saveViewSettings = function (): void {
             <flux:tab name="markierungen" icon="map-pin">Markierungen</flux:tab>
             <flux:tab name="startseite" icon="home">Startseite</flux:tab>
             <flux:tab name="ansicht" icon="squares-2x2">Ansicht</flux:tab>
+            <flux:tab name="hintergrundbild" icon="photo">Hintergrundbild</flux:tab>
             <flux:tab name="einstellungen" icon="cog-6-tooth">Einstellungen</flux:tab>
         </flux:tabs>
 
@@ -1402,6 +1403,14 @@ $saveViewSettings = function (): void {
                     </div>
                 </form>
             </flux:card>
+        </flux:tab.panel>
+
+        <flux:tab.panel name="hintergrundbild">
+            <div style="min-height: 400px;">
+                @livewire('intranet-app-base::app-background-image', [
+                    'appIdentifier' => 'mein-arbeitsschutz',
+                ])
+            </div>
         </flux:tab.panel>
 
         <flux:tab.panel name="einstellungen">
