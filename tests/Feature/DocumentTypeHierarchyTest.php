@@ -8,6 +8,7 @@ use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Category;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Document;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\DocumentAssignment;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\DocumentType;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Models\GeneralDocumentSection;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Subcategory;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\WorkArea;
 use Livewire\Volt\Volt;
@@ -78,6 +79,39 @@ it('can create document with general category without subcategory or document ty
 
     expect($assignment->subcategory_id)->toBeNull();
     expect($assignment->document_type_id)->toBeNull();
+});
+
+it('can create document with general category and general document section subcategory', function () {
+    $generalCategory = Category::query()->where('key', 'general')->first();
+    $section = GeneralDocumentSection::query()->where('key', 'betriebsarzt_informiert')->first();
+
+    expect($section)->not->toBeNull();
+
+    $subcategory = Subcategory::query()
+        ->where('category_id', $generalCategory->id)
+        ->where('source_type', GeneralDocumentSection::class)
+        ->where('source_id', $section->id)
+        ->first();
+
+    expect($subcategory)->not->toBeNull();
+
+    $document = Document::factory()->create();
+
+    $assignment = DocumentAssignment::create([
+        'document_id' => $document->id,
+        'category_id' => $generalCategory->id,
+        'subcategory_id' => $subcategory->id,
+        'document_type_id' => null,
+    ]);
+
+    expect($assignment->subcategory_id)->toBe($subcategory->id);
+});
+
+it('shows general document section on general category view', function () {
+    $generalCategory = Category::query()->where('key', 'general')->first();
+
+    Volt::test('apps.mein-arbeitsschutz.documents.show', $generalCategory->key)
+        ->assertSee('Der Betriebsarzt informiert');
 });
 
 it('can create document with multiple categories', function () {

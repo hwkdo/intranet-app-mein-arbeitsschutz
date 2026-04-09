@@ -4,6 +4,7 @@ use Hwkdo\IntranetAppMeinArbeitsschutz\Enums\ViewModeEnum;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Category;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Document;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\DocumentType;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Models\GeneralDocumentSection;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\IntranetAppMeinArbeitsschutzSettings;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Subcategory;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\WorkArea;
@@ -30,13 +31,20 @@ mount(function (string $categoryKey) {
 });
 
 $subcategories = computed(function () {
-    $subcategories = Subcategory::query()
+    return Subcategory::query()
         ->where('category_id', $this->category->id)
         ->with('source')
-        ->orderBy('id')
-        ->get();
+        ->get()
+        ->sortBy(function (Subcategory $sub): array {
+            $source = $sub->source;
 
-    return $subcategories;
+            if ($source instanceof GeneralDocumentSection) {
+                return [0, $source->sort_order, $sub->id];
+            }
+
+            return [1, $sub->id];
+        })
+        ->values();
 });
 
 $documentTypes = computed(function () {
@@ -152,6 +160,7 @@ $currentViewMode = computed(function () {
         @php($documentsByDocumentType = $this->documentsIndex['byDocumentType'])
         @php($categoryDocuments = $documentsByCategory[$this->category->id] ?? [])
         @php($isWorkAreas = $this->category->key === 'work_areas')
+        @php($isGeneral = $this->category->key === 'general')
 
         @if($this->subcategories->isNotEmpty())
             <div class="space-y-6">
@@ -194,7 +203,13 @@ $currentViewMode = computed(function () {
                         @endforeach
                     </div>
                     <flux:text class="text-sm text-zinc-500">
-                        Bitte zuerst einen {{ $isWorkAreas ? 'Fachbereich' : 'Standort' }} auswählen, um die Dokumente anzuzeigen.
+                        @if($isWorkAreas)
+                            Bitte zuerst einen Fachbereich auswählen, um die Dokumente anzuzeigen.
+                        @elseif($isGeneral)
+                            Bitte zuerst einen Ordner auswählen, um die Dokumente anzuzeigen.
+                        @else
+                            Bitte zuerst einen Standort auswählen, um die Dokumente anzuzeigen.
+                        @endif
                     </flux:text>
                 @else
                     @php($selectedSubcategoryId = $this->selectedSubcategoryId)
@@ -259,7 +274,13 @@ $currentViewMode = computed(function () {
                         <div class="flex items-center justify-between gap-3">
                             <flux:heading size="md">{{ $selectedLabel }}</flux:heading>
                             <flux:button variant="ghost" wire:click="clearSelection">
-                                {{ $isWorkAreas ? 'Zurück zu Fachbereichen' : 'Zurück zu Standorten' }}
+                                @if($isWorkAreas)
+                                    Zurück zu Fachbereichen
+                                @elseif($isGeneral)
+                                    Zurück zu Ordnern
+                                @else
+                                    Zurück zu Standorten
+                                @endif
                             </flux:button>
                         </div>
 
