@@ -30,6 +30,7 @@ Route::middleware(['web','auth','can:see-app-mein-arbeitsschutz'])->group(functi
     Volt::route('apps/mein-arbeitsschutz/example', 'apps.mein-arbeitsschutz.example')->name('apps.mein-arbeitsschutz.example');    
     Volt::route('apps/mein-arbeitsschutz/chat', 'apps.mein-arbeitsschutz.chat')->name('apps.mein-arbeitsschutz.chat');
     Volt::route('apps/mein-arbeitsschutz/settings/user', 'apps.mein-arbeitsschutz.settings.user')->name('apps.mein-arbeitsschutz.settings.user');
+    Volt::route('apps/mein-arbeitsschutz/info', 'apps.mein-arbeitsschutz.info')->name('apps.mein-arbeitsschutz.info');
 });
 
 Route::middleware(['web','auth','can:manage-app-mein-arbeitsschutz'])->group(function () {
