@@ -58,6 +58,7 @@ class DocumentsSearchSource implements SearchSourceInterface
                 icon: $this->icon(),
                 subtitle: $document->description ?: null,
                 sourceKey: $this->key(),
+                download: true,
             ))
             ->values();
     }
