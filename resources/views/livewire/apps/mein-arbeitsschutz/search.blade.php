@@ -1,8 +1,8 @@
 <?php
 
 use Hwkdo\IntranetAppMeinArbeitsschutz\Enums\ViewModeEnum;
-use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Document;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\IntranetAppMeinArbeitsschutzSettings;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Search\DocumentSearch;
 use function Livewire\Volt\{computed, state, title};
 
 title('MeinArbeitsschutz - Suche');
@@ -20,10 +20,7 @@ $results = computed(function () {
         return collect();
     }
 
-    return Document::search($this->searchQuery)
-        ->query(fn ($query) => $query->with('media'))
-        ->take(50)
-        ->get();
+    return DocumentSearch::query($this->searchQuery, 50);
 });
 
 ?>

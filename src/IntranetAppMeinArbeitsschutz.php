@@ -3,9 +3,11 @@
 namespace Hwkdo\IntranetAppMeinArbeitsschutz;
 
 use Hwkdo\IntranetAppBase\Interfaces\IntranetAppInterface;
+use Hwkdo\IntranetAppBase\Interfaces\ProvidesSearchInterface;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Search\DocumentsSearchSource;
 use Illuminate\Support\Collection;
 
-class IntranetAppMeinArbeitsschutz implements IntranetAppInterface
+class IntranetAppMeinArbeitsschutz implements IntranetAppInterface, ProvidesSearchInterface
 {
     public static function app_name(): string
     {
@@ -45,5 +47,15 @@ class IntranetAppMeinArbeitsschutz implements IntranetAppInterface
     public static function mcpServers(): array
     {
         return [];
+    }
+
+    /**
+     * @return list<class-string<\Hwkdo\IntranetAppBase\Interfaces\SearchSourceInterface>>
+     */
+    public static function searchSources(): array
+    {
+        return [
+            DocumentsSearchSource::class,
+        ];
     }
 }
