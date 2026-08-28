@@ -4,10 +4,14 @@ use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Document;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
+
 Route::middleware(['web','auth','can:see-app-mein-arbeitsschutz'])->group(function () {        
     Volt::route('apps/mein-arbeitsschutz', 'apps.mein-arbeitsschutz.index')->name('apps.mein-arbeitsschutz.index');
+
     Volt::route('apps/mein-arbeitsschutz/dokumente', 'apps.mein-arbeitsschutz.documents')->name('apps.mein-arbeitsschutz.documents');
+
     Volt::route('apps/mein-arbeitsschutz/dokumente/{categoryKey}', 'apps.mein-arbeitsschutz.documents.show')->name('apps.mein-arbeitsschutz.documents.show');
+
     Route::get('apps/mein-arbeitsschutz/dokumente/{document}/download', function (Document $document) {
         $media = $document->getFirstMedia('documents');
 
@@ -17,6 +21,7 @@ Route::middleware(['web','auth','can:see-app-mein-arbeitsschutz'])->group(functi
 
         return response()->download($media->getPath(), $media->file_name);
     })->name('apps.mein-arbeitsschutz.documents.download');
+
     Route::get('apps/mein-arbeitsschutz/dokumente/{document}/thumb', function (Document $document) {
         $media = $document->getFirstMedia('documents');
 
@@ -26,14 +31,17 @@ Route::middleware(['web','auth','can:see-app-mein-arbeitsschutz'])->group(functi
 
         return response()->file($media->getPath('thumb'));
     })->name('apps.mein-arbeitsschutz.documents.thumb');
+
     Volt::route('apps/mein-arbeitsschutz/suche', 'apps.mein-arbeitsschutz.search')->name('apps.mein-arbeitsschutz.search');
-    Volt::route('apps/mein-arbeitsschutz/example', 'apps.mein-arbeitsschutz.example')->name('apps.mein-arbeitsschutz.example');    
+
+    Volt::route('apps/mein-arbeitsschutz/example', 'apps.mein-arbeitsschutz.example')->name('apps.mein-arbeitsschutz.example');
+    
     Volt::route('apps/mein-arbeitsschutz/chat', 'apps.mein-arbeitsschutz.chat')
         ->middleware('can:allow_ai_usage')
         ->name('apps.mein-arbeitsschutz.chat');
-    Volt::route('apps/mein-arbeitsschutz/settings/user', 'apps.mein-arbeitsschutz.settings.user')->name('apps.mein-arbeitsschutz.settings.user');
     Volt::route('apps/mein-arbeitsschutz/info', 'apps.mein-arbeitsschutz.info')->name('apps.mein-arbeitsschutz.info');
 });
+
 
 Route::middleware(['web','auth','can:manage-app-mein-arbeitsschutz'])->group(function () {
     Volt::route('apps/mein-arbeitsschutz/admin', 'apps.mein-arbeitsschutz.admin.index')->name('apps.mein-arbeitsschutz.admin.index');

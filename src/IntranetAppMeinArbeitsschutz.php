@@ -4,6 +4,8 @@ namespace Hwkdo\IntranetAppMeinArbeitsschutz;
 
 use Hwkdo\IntranetAppBase\Interfaces\IntranetAppInterface;
 use Hwkdo\IntranetAppBase\Interfaces\ProvidesSearchInterface;
+use Hwkdo\IntranetAppBase\Interfaces\SearchSourceInterface;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Data\AppSettings;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Search\DocumentsSearchSource;
 use Illuminate\Support\Collection;
 
@@ -36,12 +38,12 @@ class IntranetAppMeinArbeitsschutz implements IntranetAppInterface, ProvidesSear
 
     public static function userSettingsClass(): ?string
     {
-        return \Hwkdo\IntranetAppMeinArbeitsschutz\Data\UserSettings::class;
+        return null;
     }
 
     public static function appSettingsClass(): ?string
     {
-        return \Hwkdo\IntranetAppMeinArbeitsschutz\Data\AppSettings::class;
+        return AppSettings::class;
     }
 
     public static function mcpServers(): array
@@ -50,7 +52,7 @@ class IntranetAppMeinArbeitsschutz implements IntranetAppInterface, ProvidesSear
     }
 
     /**
-     * @return list<class-string<\Hwkdo\IntranetAppBase\Interfaces\SearchSourceInterface>>
+     * @return list<class-string<SearchSourceInterface>>
      */
     public static function searchSources(): array
     {

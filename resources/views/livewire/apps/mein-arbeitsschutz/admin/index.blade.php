@@ -679,7 +679,6 @@ $availableRoutes = computed(function () {
         ['label' => 'Dokumente', 'href' => route('apps.mein-arbeitsschutz.documents'), 'route' => 'apps.mein-arbeitsschutz.documents'],
         ['label' => 'Suche', 'href' => route('apps.mein-arbeitsschutz.search'), 'route' => 'apps.mein-arbeitsschutz.search'],
         ['label' => 'Chat', 'href' => route('apps.mein-arbeitsschutz.chat'), 'route' => 'apps.mein-arbeitsschutz.chat'],
-        ['label' => 'Meine Einstellungen', 'href' => route('apps.mein-arbeitsschutz.settings.user'), 'route' => 'apps.mein-arbeitsschutz.settings.user'],
     ];
 
     return collect($defaultNavItems)->mapWithKeys(function ($item) {
