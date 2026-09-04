@@ -56,10 +56,36 @@ class DocumentsSearchSource implements SearchSourceInterface
                 appIdentifier: $this->appIdentifier(),
                 appName: $this->appName(),
                 icon: $this->icon(),
+                favoriteKey: $this->key().':'.$document->id,
                 subtitle: $document->description ?: null,
                 sourceKey: $this->key(),
                 download: true,
             ))
             ->values();
+    }
+
+    public function resolveFavorite(string $entityId, Authenticatable $user): ?SearchResult
+    {
+        if (! $this->isAvailableFor($user)) {
+            return null;
+        }
+
+        $document = Document::query()->find($entityId);
+
+        if ($document === null) {
+            return null;
+        }
+
+        return new SearchResult(
+            title: $document->title,
+            url: route('apps.mein-arbeitsschutz.documents.download', $document),
+            appIdentifier: $this->appIdentifier(),
+            appName: $this->appName(),
+            icon: $this->icon(),
+            favoriteKey: $this->key().':'.$document->id,
+            subtitle: $document->description ?: null,
+            sourceKey: $this->key(),
+            download: true,
+        );
     }
 }
