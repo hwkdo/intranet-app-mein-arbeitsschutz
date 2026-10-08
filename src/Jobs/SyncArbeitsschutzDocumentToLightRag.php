@@ -8,6 +8,7 @@ use Hwkdo\IntranetAppMeinArbeitsschutz\Enums\ArbeitsschutzLightRagStatus;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Document;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\DocumentLightRagState;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Services\LightRagArbeitsschutzClient;
+use Hwkdo\LlamaParseLaravel\LlamaParse;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Storage;
@@ -20,11 +21,11 @@ class SyncArbeitsschutzDocumentToLightRag implements ShouldQueue
 
     public int $tries = 5;
 
-    public int $timeout = 180;
+    public int $timeout = 600;
 
     public function __construct(public int $documentId) {}
 
-    public function handle(LightRagArbeitsschutzClient $client): void
+    public function handle(LightRagArbeitsschutzClient $client, LlamaParse $llamaParse): void
     {
         if (app()->runningUnitTests() && ! config('intranet-app-mein-arbeitsschutz.lightrag.execute_in_tests')) {
             return;
@@ -55,13 +56,14 @@ class SyncArbeitsschutzDocumentToLightRag implements ShouldQueue
 
         try {
             $extension = $media->extension !== '' ? '.'.$media->extension : '';
-            $trackId = $client->uploadFile(
-                $path,
-                'arbeitsschutz-'.$document->id.$extension,
-            )['track_id'];
+            $fileName = 'arbeitsschutz-'.$document->id.$extension;
+            $parsed = $this->insertParsed($client, $llamaParse, $path, $fileName, $document->id, $media->id);
+            if ($parsed['track_id'] === '') {
+                return;
+            }
 
             $state->update([
-                'track_id' => $trackId,
+                'track_id' => $parsed['track_id'],
                 'status' => ArbeitsschutzLightRagStatus::Processing,
                 'error_message' => null,
             ]);
@@ -75,6 +77,39 @@ class SyncArbeitsschutzDocumentToLightRag implements ShouldQueue
             report($exception);
             $this->markFailed($document->id, $media->id, $exception->getMessage());
         }
+    }
+
+    /**
+     * @return array{track_id: string}
+     */
+    private function insertParsed(
+        LightRagArbeitsschutzClient $client,
+        LlamaParse $llamaParse,
+        string $path,
+        string $fileName,
+        int $documentId,
+        int $mediaId,
+    ): array {
+        if (! $llamaParse->configured()) {
+            $this->markFailed($documentId, $mediaId, 'LlamaParse ist nicht konfiguriert. LLAMA_CLOUD_API_KEY fehlt.');
+
+            return ['track_id' => ''];
+        }
+
+        $contents = file_get_contents($path);
+        $markdown = $llamaParse->parse(is_string($contents) ? $contents : '', $fileName);
+
+        return $client->insertText(
+            '# '.$fileName."\n\n".$markdown,
+            $this->markdownName($fileName),
+        );
+    }
+
+    private function markdownName(string $fileName): string
+    {
+        $base = pathinfo($fileName, PATHINFO_FILENAME);
+
+        return ($base !== '' ? $base : 'dokument').'.md';
     }
 
     private function readablePath(Media $media): ?string

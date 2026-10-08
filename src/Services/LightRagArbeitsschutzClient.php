@@ -15,6 +15,30 @@ class LightRagArbeitsschutzClient
     /**
      * @return array{track_id: string}
      */
+    public function insertText(string $text, string $fileSource): array
+    {
+        $response = $this->request()->post($this->baseUrl().'/documents/text', [
+            'text' => $text,
+            'file_source' => $fileSource,
+        ]);
+
+        if ($response->status() === 409) {
+            throw new LightRagArbeitsschutzException('LightRAG enthält die Datei bereits.');
+        }
+
+        $response->throw();
+
+        $trackId = $response->json('track_id');
+        if (! is_string($trackId) || $trackId === '') {
+            throw new LightRagArbeitsschutzException('LightRAG hat keine track_id geliefert.');
+        }
+
+        return ['track_id' => $trackId];
+    }
+
+    /**
+     * @return array{track_id: string}
+     */
     public function uploadFile(string $absolutePath, string $fileName): array
     {
         $handle = fopen($absolutePath, 'r');
