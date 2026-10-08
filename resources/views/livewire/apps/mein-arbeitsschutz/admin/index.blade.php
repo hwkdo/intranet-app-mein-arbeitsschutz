@@ -759,6 +759,7 @@ $saveViewSettings = function (): void {
         <flux:tabs wire:model="activeTab">
             <flux:tab name="uploads" icon="arrow-up-tray">Uploads</flux:tab>
             <flux:tab name="dokumente" icon="document-text">Dokumente</flux:tab>
+            <flux:tab name="lightrag" icon="circle-stack">LightRAG</flux:tab>
             <flux:tab name="arbeitsbereiche" icon="wrench-screwdriver">Arbeitsbereiche</flux:tab>
             <flux:tab name="markierungen" icon="map-pin">Markierungen</flux:tab>
             <flux:tab name="startseite" icon="home">Startseite</flux:tab>
@@ -1182,6 +1183,10 @@ $saveViewSettings = function (): void {
                     </div>
                 @endif
             </flux:card>
+        </flux:tab.panel>
+
+        <flux:tab.panel name="lightrag">
+            @livewire(\Hwkdo\IntranetAppMeinArbeitsschutz\Livewire\Admin\LightRag::class)
         </flux:tab.panel>
 
         <flux:tab.panel name="arbeitsbereiche">

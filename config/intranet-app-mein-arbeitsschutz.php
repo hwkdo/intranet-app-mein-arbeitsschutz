@@ -2,6 +2,12 @@
 
 // config for Hwkdo/IntranetAppMeinArbeitsschutz
 return [
+    'lightrag' => [
+        'url' => env('LIGHTRAG_ARBEITSSCHUTZ_URL', 'https://lightrag-arbeitsschutz.swarm.hwkdo.com'),
+        'api_key' => env('LIGHTRAG_API_KEY'),
+        'execute_in_tests' => false,
+    ],
+
     'roles' => [
         'admin' => [
             'name' => 'App-MeinArbeitsschutz-Admin',
