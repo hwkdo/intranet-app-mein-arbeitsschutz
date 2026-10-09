@@ -1418,11 +1418,18 @@ $saveViewSettings = function (): void {
         </flux:tab.panel>
 
         <flux:tab.panel name="einstellungen">
-            <div style="min-height: 400px;">
+            <div class="min-h-[400px] space-y-4">
+                @livewire('intranet-app-base::document-parse-settings', [
+                    'appIdentifier' => 'mein-arbeitsschutz',
+                    'settingsModelClass' => \Hwkdo\IntranetAppMeinArbeitsschutz\Models\IntranetAppMeinArbeitsschutzSettings::class,
+                    'appSettingsClass' => \Hwkdo\IntranetAppMeinArbeitsschutz\Data\AppSettings::class,
+                ])
+
                 @livewire('intranet-app-base::admin-settings', [
                     'appIdentifier' => 'mein-arbeitsschutz',
                     'settingsModelClass' => '\Hwkdo\IntranetAppMeinArbeitsschutz\Models\IntranetAppMeinArbeitsschutzSettings',
-                    'appSettingsClass' => '\Hwkdo\IntranetAppMeinArbeitsschutz\Data\AppSettings'
+                    'appSettingsClass' => '\Hwkdo\IntranetAppMeinArbeitsschutz\Data\AppSettings',
+                    'excludedKeys' => ['documentParseEngineOverride', 'documentParseTierOverride'],
                 ])
             </div>
         </flux:tab.panel>

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Hwkdo\IntranetAppMeinArbeitsschutz\Jobs;
 
+use Hwkdo\IntranetAppBase\Contracts\IntranetAiGatewayInterface;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Enums\ArbeitsschutzLightRagStatus;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Document;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\DocumentLightRagState;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Services\LightRagArbeitsschutzClient;
-use Hwkdo\LlamaParseLaravel\LlamaParse;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Storage;
@@ -25,7 +25,7 @@ class SyncArbeitsschutzDocumentToLightRag implements ShouldQueue
 
     public function __construct(public int $documentId) {}
 
-    public function handle(LightRagArbeitsschutzClient $client, LlamaParse $llamaParse): void
+    public function handle(LightRagArbeitsschutzClient $client, IntranetAiGatewayInterface $gateway): void
     {
         if (app()->runningUnitTests() && ! config('intranet-app-mein-arbeitsschutz.lightrag.execute_in_tests')) {
             return;
@@ -57,7 +57,7 @@ class SyncArbeitsschutzDocumentToLightRag implements ShouldQueue
         try {
             $extension = $media->extension !== '' ? '.'.$media->extension : '';
             $fileName = 'arbeitsschutz-'.$document->id.$extension;
-            $parsed = $this->insertParsed($client, $llamaParse, $path, $fileName, $document->id, $media->id);
+            $parsed = $this->insertParsed($client, $gateway, $path, $fileName);
             if ($parsed['track_id'] === '') {
                 return;
             }
@@ -84,20 +84,11 @@ class SyncArbeitsschutzDocumentToLightRag implements ShouldQueue
      */
     private function insertParsed(
         LightRagArbeitsschutzClient $client,
-        LlamaParse $llamaParse,
+        IntranetAiGatewayInterface $gateway,
         string $path,
         string $fileName,
-        int $documentId,
-        int $mediaId,
     ): array {
-        if (! $llamaParse->configured()) {
-            $this->markFailed($documentId, $mediaId, 'LlamaParse ist nicht konfiguriert. LLAMA_CLOUD_API_KEY fehlt.');
-
-            return ['track_id' => ''];
-        }
-
-        $contents = file_get_contents($path);
-        $markdown = $llamaParse->parse(is_string($contents) ? $contents : '', $fileName);
+        $markdown = $gateway->parseAppDocument($path, 'mein-arbeitsschutz');
 
         return $client->insertText(
             '# '.$fileName."\n\n".$markdown,

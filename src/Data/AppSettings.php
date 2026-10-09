@@ -2,14 +2,18 @@
 
 namespace Hwkdo\IntranetAppMeinArbeitsschutz\Data;
 
+use Hwkdo\IntranetAppBase\Contracts\HasDocumentParseSettings;
 use Hwkdo\IntranetAppBase\Data\Attributes\Description;
 use Hwkdo\IntranetAppBase\Data\BaseAppSettings;
+use Hwkdo\IntranetAppBase\Enums\DocumentParseEngine;
+use Hwkdo\IntranetAppBase\Traits\HasDocumentParseSettingsFields;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Enums\ViewModeEnum;
 
-class AppSettings extends BaseAppSettings
+class AppSettings extends BaseAppSettings implements HasDocumentParseSettings
 {
+    use HasDocumentParseSettingsFields;
+
     public function __construct(
-        
 
         #[Description('OpenWebUi-Collection-ID für KI Ablage der hochgeladenen Dokumente')]
         public string $openWebUiCollectionId = 'b513b09b-2e3d-43a8-8213-bc120395913a',
@@ -36,5 +40,11 @@ class AppSettings extends BaseAppSettings
             'hazardous_substances' => 'grid',
             'safety_data_sheets' => 'grid',
         ],
+
+        #[Description('Document-Parsing-Motor überschreiben (leer = Intranet-Base-Default)')]
+        public ?DocumentParseEngine $documentParseEngineOverride = null,
+
+        #[Description('LlamaParse-Tier überschreiben (leer = Intranet-Base-Default)')]
+        public ?string $documentParseTierOverride = null,
     ) {}
 }
