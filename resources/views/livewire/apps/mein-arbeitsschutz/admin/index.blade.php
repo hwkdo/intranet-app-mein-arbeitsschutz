@@ -26,8 +26,9 @@ uses([WithFileUploads::class]);
 
 title('MeinArbeitsschutz - Admin');
 
+state(['activeTab' => 'uploads'])->url(as: 'tab');
+
 state([
-    'activeTab' => 'uploads',
     'uploadTitles' => [],
     'uploadDescriptions' => [],
     'uploadFiles' => [],
@@ -78,6 +79,22 @@ rules([
 ]);
 
 mount(function () {
+    $allowedTabs = [
+        'uploads',
+        'dokumente',
+        'lightrag',
+        'arbeitsbereiche',
+        'markierungen',
+        'startseite',
+        'ansicht',
+        'hintergrundbild',
+        'einstellungen',
+    ];
+
+    if (! in_array($this->activeTab, $allowedTabs, true)) {
+        $this->activeTab = 'uploads';
+    }
+
     // Initialisiere Arrays explizit als leere Arrays
     $this->selectedCategoryIds = [];
     $this->selectedSubcategoryIds = [];

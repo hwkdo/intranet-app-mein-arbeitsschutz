@@ -2,14 +2,16 @@
 
 namespace Hwkdo\IntranetAppMeinArbeitsschutz;
 
+use Hwkdo\IntranetAppBase\Data\SearchActionDefinition;
 use Hwkdo\IntranetAppBase\Interfaces\IntranetAppInterface;
+use Hwkdo\IntranetAppBase\Interfaces\ProvidesSearchActionsInterface;
 use Hwkdo\IntranetAppBase\Interfaces\ProvidesSearchInterface;
 use Hwkdo\IntranetAppBase\Interfaces\SearchSourceInterface;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Data\AppSettings;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Search\DocumentsSearchSource;
 use Illuminate\Support\Collection;
 
-class IntranetAppMeinArbeitsschutz implements IntranetAppInterface, ProvidesSearchInterface
+class IntranetAppMeinArbeitsschutz implements IntranetAppInterface, ProvidesSearchActionsInterface, ProvidesSearchInterface
 {
     public static function app_name(): string
     {
@@ -58,6 +60,32 @@ class IntranetAppMeinArbeitsschutz implements IntranetAppInterface, ProvidesSear
     {
         return [
             DocumentsSearchSource::class,
+        ];
+    }
+
+    public static function searchActions(): array
+    {
+        return [
+            new SearchActionDefinition(
+                key: 'mein-arbeitsschutz.lightrag',
+                title: 'LightRAG',
+                keywords: [
+                    'lightrag',
+                    'rag',
+                    'light rag',
+                    'arbeitsschutz lightrag',
+                    'arbeitsschutz rag',
+                    'mein arbeitsschutz lightrag',
+                ],
+                routeName: 'apps.mein-arbeitsschutz.admin.index',
+                appIdentifier: self::identifier(),
+                appName: self::app_name(),
+                icon: 'circle-stack',
+                permission: 'manage-app-mein-arbeitsschutz',
+                subtitle: self::app_name(),
+                sort: 100,
+                queryParameters: ['tab' => 'lightrag'],
+            ),
         ];
     }
 }
