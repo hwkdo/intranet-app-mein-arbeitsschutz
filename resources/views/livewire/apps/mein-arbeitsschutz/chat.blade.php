@@ -39,7 +39,7 @@ $hasApiKey = computed(function () {
 });
 
 ?>
-
+<div>
 <x-intranet-app-mein-arbeitsschutz::mein-arbeitsschutz-layout heading="Chat" subheading="KI-Chat für Arbeitsschutz-Dokumente">
     @if ($this->hasApiKey)
         @livewire('prism-chat', [
@@ -68,3 +68,4 @@ $hasApiKey = computed(function () {
         </flux:card>
     @endif
 </x-intranet-app-mein-arbeitsschutz::mein-arbeitsschutz-layout>
+</div>

@@ -10,7 +10,6 @@
         ['label' => 'Dokumente', 'href' => route('apps.mein-arbeitsschutz.documents'), 'icon' => 'document-text', 'description' => 'Dokumente durchsuchen', 'buttonText' => 'Dokumente öffnen'],
         ['label' => 'Suche', 'href' => route('apps.mein-arbeitsschutz.search'), 'icon' => 'magnifying-glass', 'description' => 'Dokumente durchsuchen', 'buttonText' => 'Suche öffnen'],
         ['label' => 'Chat', 'href' => route('apps.mein-arbeitsschutz.chat'), 'icon' => 'chat-bubble-left-right', 'description' => 'KI-Chat nutzen', 'buttonText' => 'Chat öffnen', 'requiresAiUsage' => true],        ['label' => 'App-Info', 'href' => route('apps.mein-arbeitsschutz.info'), 'icon' => 'information-circle', 'description' => 'Installierte Version und Release-Historie', 'buttonText' => 'App-Info anzeigen'],
-        ['label' => 'Hintergrund', 'href' => route('apps.mein-arbeitsschutz.admin.background-activities'), 'icon' => 'clock', 'description' => 'Geplante Tasks, Jobs und Versand', 'buttonText' => 'Hintergrund öffnen', 'permission' => 'manage-app-mein-arbeitsschutz'],
         ['label' => 'Admin', 'href' => route('apps.mein-arbeitsschutz.admin.index'), 'icon' => 'shield-check', 'description' => 'Administrationsbereich verwalten', 'buttonText' => 'Admin öffnen', 'permission' => 'manage-app-mein-arbeitsschutz']
     ];
 
