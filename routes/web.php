@@ -46,3 +46,9 @@ Route::middleware(['web','auth','can:see-app-mein-arbeitsschutz'])->group(functi
 Route::middleware(['web','auth','can:manage-app-mein-arbeitsschutz'])->group(function () {
     Volt::route('apps/mein-arbeitsschutz/admin', 'apps.mein-arbeitsschutz.admin.index')->name('apps.mein-arbeitsschutz.admin.index');
 });
+
+Route::middleware(['web', 'auth', 'can:manage-app-mein-arbeitsschutz'])->group(function (): void {
+    Volt::route('apps/mein-arbeitsschutz/admin/background-activities', 'apps.mein-arbeitsschutz.admin.background-activities')
+        ->name('apps.mein-arbeitsschutz.admin.background-activities');
+});
+

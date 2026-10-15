@@ -10,7 +10,6 @@ use Hwkdo\IntranetAppMeinArbeitsschutz\Listeners\QueueDocumentForLightRag;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Listeners\RemoveDocumentFromLightRag;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Listeners\UploadDocumentToOpenWebUi;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Document;
-use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Livewire\Volt\Volt;
@@ -39,9 +38,6 @@ class IntranetAppMeinArbeitsschutzServiceProvider extends PackageServiceProvider
     {
         parent::boot();
 
-        $this->app->resolving(Schedule::class, function (Schedule $schedule): void {
-            $schedule->command('arbeitsschutz:sync-lightrag-status')->everyMinute()->withoutOverlapping();
-        });
         $this->app->booted(function () {
             Volt::mount(__DIR__.'/../resources/views/livewire');
         });

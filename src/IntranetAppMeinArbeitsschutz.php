@@ -2,6 +2,8 @@
 
 namespace Hwkdo\IntranetAppMeinArbeitsschutz;
 
+use Hwkdo\IntranetAppBase\Interfaces\ProvidesBackgroundActivitiesInterface;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Background\MeinArbeitsschutzBackgroundActivities;
 use Hwkdo\IntranetAppBase\Data\SearchActionDefinition;
 use Hwkdo\IntranetAppBase\Interfaces\IntranetAppInterface;
 use Hwkdo\IntranetAppBase\Interfaces\ProvidesSearchActionsInterface;
@@ -11,7 +13,7 @@ use Hwkdo\IntranetAppMeinArbeitsschutz\Data\AppSettings;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Search\DocumentsSearchSource;
 use Illuminate\Support\Collection;
 
-class IntranetAppMeinArbeitsschutz implements IntranetAppInterface, ProvidesSearchActionsInterface, ProvidesSearchInterface
+class IntranetAppMeinArbeitsschutz implements IntranetAppInterface, ProvidesBackgroundActivitiesInterface, ProvidesSearchActionsInterface, ProvidesSearchInterface
 {
     public static function app_name(): string
     {
@@ -88,4 +90,11 @@ class IntranetAppMeinArbeitsschutz implements IntranetAppInterface, ProvidesSear
             ),
         ];
     }
+
+    public static function backgroundActivities(): array
+    {
+        return MeinArbeitsschutzBackgroundActivities::definitions();
+    }
+
+
 }
