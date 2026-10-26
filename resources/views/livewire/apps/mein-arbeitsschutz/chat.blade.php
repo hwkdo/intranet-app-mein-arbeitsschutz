@@ -48,6 +48,12 @@ $hasApiKey = computed(function () {
             'apiKey' => $this->apiKey,
             'baseUrl' => $this->baseUrl,
             'useMcpTools' => false,
+            'suggestions' => [
+                'Was muss ich bei einem Arbeitsunfall tun?',
+                'Welche Regeln gelten für die Bildschirmarbeit?',
+                'Wer ist bei uns Ersthelfer bzw. Sicherheitsbeauftragter?',
+                'Wie verhalte ich mich im Brandfall?',
+            ],
         ])
     @else
         <flux:card class="glass-card">
