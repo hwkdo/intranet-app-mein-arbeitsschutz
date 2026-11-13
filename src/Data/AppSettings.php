@@ -18,6 +18,9 @@ class AppSettings extends BaseAppSettings implements HasDocumentParseSettings
         #[Description('OpenWebUi-Collection-ID für KI Ablage der hochgeladenen Dokumente')]
         public string $openWebUiCollectionId = 'b513b09b-2e3d-43a8-8213-bc120395913a',
 
+        #[Description('Neue Dokumente automatisch in die OpenWebUI-Collection hochladen. Der LightRAG-Index läuft unabhängig davon weiter.')]
+        public bool $openWebUiUploadEnabled = true,
+
         #[Description('OpenWebUi-Modell für KI Chat')]
         public string $openWebUiModel = 'Intranet-App-Mein-Arbeitsschutz',
 

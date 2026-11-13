@@ -16,8 +16,19 @@ class IntranetAppMeinArbeitsschutzSettings extends Model
         ];
     }
 
-    public static function current(): ?IntranetAppMeinArbeitsschutzSettings
+    public static function current(): ?self
     {
         return self::orderBy('version', 'desc')->first();
+    }
+
+    public static function uploadsDocumentsToOpenWebUi(): bool
+    {
+        $current = self::current();
+
+        if ($current === null || $current->settings === null) {
+            return true;
+        }
+
+        return $current->settings->openWebUiUploadEnabled;
     }
 }

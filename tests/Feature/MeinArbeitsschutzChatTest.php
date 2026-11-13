@@ -22,6 +22,8 @@ test('chat page shows prism-chat when api token and allow_ai_usage exist', funct
 
     $response->assertOk();
     $response->assertSeeLivewire('prism-chat');
+    $response->assertSee('lightragInstance', false);
+    $response->assertSee('arbeitsschutz', false);
 });
 
 test('chat page is forbidden without see-app permission', function () {

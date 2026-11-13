@@ -37,6 +37,10 @@ class UploadToOpenWebUiJob implements ShouldQueue
                 return;
             }
 
+            if (! $settings->settings->openWebUiUploadEnabled) {
+                return;
+            }
+
             $collectionId = $settings->settings->openWebUiCollectionId;
 
             if (empty($collectionId)) {

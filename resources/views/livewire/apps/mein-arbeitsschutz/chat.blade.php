@@ -48,6 +48,7 @@ $hasApiKey = computed(function () {
             'apiKey' => $this->apiKey,
             'baseUrl' => $this->baseUrl,
             'useMcpTools' => false,
+            'lightragInstance' => 'arbeitsschutz',
             'suggestions' => [
                 'Was muss ich bei einem Arbeitsunfall tun?',
                 'Welche Regeln gelten für die Bildschirmarbeit?',
