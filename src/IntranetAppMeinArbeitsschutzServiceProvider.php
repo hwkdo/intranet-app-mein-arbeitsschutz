@@ -2,6 +2,7 @@
 
 namespace Hwkdo\IntranetAppMeinArbeitsschutz;
 
+use Hwkdo\IntranetAppBase\Services\LightRagCitationRegistry;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Commands\SyncArbeitsschutzLightRagStatusCommand;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Events\DocumentDeleted;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Events\DocumentUploaded;
@@ -10,6 +11,7 @@ use Hwkdo\IntranetAppMeinArbeitsschutz\Listeners\QueueDocumentForLightRag;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Listeners\RemoveDocumentFromLightRag;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Listeners\UploadDocumentToOpenWebUi;
 use Hwkdo\IntranetAppMeinArbeitsschutz\Models\Document;
+use Hwkdo\IntranetAppMeinArbeitsschutz\Services\ArbeitsschutzCitationLinker;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Livewire\Volt\Volt;
@@ -40,6 +42,12 @@ class IntranetAppMeinArbeitsschutzServiceProvider extends PackageServiceProvider
 
         $this->app->booted(function () {
             Volt::mount(__DIR__.'/../resources/views/livewire');
+        });
+
+        $this->app->booted(function (): void {
+            $this->app->make(LightRagCitationRegistry::class)->register(
+                $this->app->make(ArbeitsschutzCitationLinker::class),
+            );
         });
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 

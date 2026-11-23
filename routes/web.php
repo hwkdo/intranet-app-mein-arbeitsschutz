@@ -21,6 +21,19 @@ Route::middleware(['web', 'auth', 'can:see-app-mein-arbeitsschutz'])->group(func
         return response()->download($media->getPath(), $media->file_name);
     })->name('apps.mein-arbeitsschutz.documents.download');
 
+    Route::get('apps/mein-arbeitsschutz/dokumente/{document}/open', function (Document $document) {
+        $media = $document->getFirstMedia('documents');
+
+        if (! $media) {
+            abort(404);
+        }
+
+        $response = $media->toInlineResponse(request());
+        $response->headers->set('Cache-Control', 'private, no-cache, must-revalidate');
+
+        return $response;
+    })->name('apps.mein-arbeitsschutz.documents.open');
+
     Route::get('apps/mein-arbeitsschutz/dokumente/{document}/thumb', function (Document $document) {
         $media = $document->getFirstMedia('documents');
 
